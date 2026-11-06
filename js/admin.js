@@ -1,0 +1,63 @@
+'use strict';
+(() => {
+  const $ = id => document.getElementById(id);
+  let csrf = '', bookings = [], month = new Date();
+  month = new Date(month.getFullYear(), month.getMonth(), 1);
+  const names = { '1': '3-Seitenkipper 3,5 t', '2': 'Planenanhänger 2,7 t' };
+  const labels = { pending: 'Reserviert', confirmed: 'Gebucht', blocked: 'Blockiert', cancelled: 'Storniert / aufgehoben' };
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const fmt = value => value.split('-').reverse().join('.');
+  const message = text => { $('message').textContent = text; };
+  async function api(action, body) {
+    const response = await fetch(`api/index.php?action=${action}`, { credentials: 'same-origin', ...(body ? { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':csrf}, body:JSON.stringify(body) } : {}) });
+    const data = await response.json().catch(() => { throw new Error('Serverantwort ungültig. Bitte PHP-Konfiguration prüfen.'); });
+    if (!response.ok) { if (response.status === 401) { $('workspace').hidden = true; $('login').hidden = false; $('logout').hidden = true; } throw new Error(data.error || 'Anfrage fehlgeschlagen.'); }
+    return data;
+  }
+  function element(tag, text, className) { const el = document.createElement(tag); el.textContent = text; if(className) el.className = className; return el; }
+  function render() {
+    $('bookings').replaceChildren();
+    const filter = $('filter').value;
+    const rows = bookings.filter(b => filter === 'active' ? b.status !== 'cancelled' : b.status === filter);
+    if (!rows.length) $('bookings').append(element('p','Keine Einträge vorhanden.'));
+    for (const b of rows) {
+      const card = element('article','','admin-booking');
+      card.append(element('strong',`${names[b.trailer]} · ${fmt(b.date_from)} – ${fmt(b.date_to)}`),element('span',labels[b.status],`badge ${b.status}`),element('p',`${b.name}${b.email ? ' · '+b.email : ''}${b.phone ? ' · '+b.phone : ''}`));
+      if(b.note) card.append(element('p',b.note));
+      card.append(element('small',`Referenz: ${b.id}`));
+      const actions = element('div','','actions');
+      const addAction = (text,status) => { const button = element('button',text,'btn'); button.type='button'; button.onclick=async()=>{ if(status==='cancelled' && !confirm('Diesen Eintrag aufheben und die Tage wieder freigeben?')) return; button.disabled=true; try{await api('status',{id:b.id,status});await refresh();message('Änderung gespeichert.');}catch(e){message(e.message);}finally{button.disabled=false;} }; actions.append(button); };
+      if(b.status==='pending') addAction('Buchung bestätigen','confirmed');
+      if(b.status!=='cancelled') addAction(b.status==='blocked'?'Blockierung aufheben':b.status==='pending'?'Reservierung ablehnen':'Buchung stornieren','cancelled');
+      card.append(actions);$('bookings').append(card);
+    }
+    $('month').textContent=month.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
+    $('calendar').replaceChildren();
+    ['Mo','Di','Mi','Do','Fr','Sa','So'].forEach(day=>$('calendar').append(element('strong',day)));
+    for(let i=0;i<(month.getDay()+6)%7;i++) $('calendar').append(element('span',''));
+    for(let d=1;d<=new Date(month.getFullYear(),month.getMonth()+1,0).getDate();d++) {
+      const date=iso(new Date(month.getFullYear(),month.getMonth(),d));
+      const b=bookings.find(b=>b.trailer===$('calendar-trailer').value&&b.status!=='cancelled'&&b.date_from<=date&&b.date_to>=date);
+      const cell=element('div',String(d),`admin-day ${b?.status||''}`); if(b)cell.append(element('small',labels[b.status]));$('calendar').append(cell);
+    }
+  }
+  async function refresh() {
+    const data=await api('admin');csrf=data.csrf;bookings=data.bookings;$('mode').value=data.mode;
+    $('workspace').hidden=false;$('login').hidden=true;$('logout').hidden=false;
+    $('mail-status').textContent=data.unsent?`${data.unsent} E-Mail(s) warten auf Versand. Bitte Server-Mailkonfiguration prüfen und Versand erneut versuchen.`:'Alle E-Mails wurden vom Mailserver angenommen. Die Zustellung im Empfängerpostfach bitte bei Einrichtung testen.';
+    $('retry-mail').hidden=!data.unsent;render();
+  }
+  function form(id,action,body,success){$(id).addEventListener('submit',async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;try{const data=await api(action,body());if(data.csrf)csrf=data.csrf;await refresh();message(success);}catch(error){message(error.message);}finally{button.disabled=false;}});}
+  form('login','login',()=>({username:$('username').value,password:$('password').value}),'Angemeldet.');
+  form('settings','settings',()=>({mode:$('mode').value}),'Einstellung gespeichert. Sie gilt für neue Reservierungen.');
+  form('block','block',()=>Object.fromEntries(new FormData($('block'))),'Zeitraum blockiert.');
+  $('from').min=$('to').min=iso(new Date());
+  $('from').onchange=()=>{$('to').min=$('from').value;if($('to').value<$('from').value)$('to').value=$('from').value;};
+  $('filter').onchange=$('calendar-trailer').onchange=render;
+  $('prev').onclick=()=>{month=new Date(month.getFullYear(),month.getMonth()-1,1);render();};
+  $('next').onclick=()=>{month=new Date(month.getFullYear(),month.getMonth()+1,1);render();};
+  $('refresh').onclick=()=>refresh().catch(e=>message(e.message));
+  $('retry-mail').onclick=async()=>{ $('retry-mail').disabled=true;try{await api('retry-mail',{});await refresh();}catch(e){message(e.message);}finally{$('retry-mail').disabled=false;} };
+  $('logout').onclick=async()=>{try{await api('logout',{});location.reload();}catch(e){message(e.message);}};
+  refresh().catch(e=>{if(e.message!=='Bitte anmelden.')message(e.message);});
+})();

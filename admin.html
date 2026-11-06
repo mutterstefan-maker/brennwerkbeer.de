@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Verwaltung – Michael Beer</title><link rel="stylesheet" href="css/style.css"><link rel="stylesheet" href="css/admin.css"></head>
+<body>
+<header class="admin-head"><a href="index.html">Michael Beer · Zur Website</a><button id="logout" class="btn" hidden>Abmelden</button></header>
+<main class="container admin-main">
+  <h1>Buchungsverwaltung</h1>
+  <p id="message" role="status" aria-live="polite"></p>
+  <form id="login" class="panel booking-form"><h2>Anmelden</h2><label for="username">Benutzername</label><input id="username" type="text" autocomplete="username" required><label for="password">Passwort</label><input id="password" type="password" autocomplete="current-password" required><button class="btn btn--primary">Anmelden</button></form>
+  <div id="workspace" hidden>
+    <div class="admin-columns">
+      <section class="panel"><h2>Einstellungen</h2><form id="settings" class="booking-form"><label for="mode">Neue Reservierungen</label><select id="mode"><option value="manual">Manuell prüfen und freigeben</option><option value="automatic">Automatisch als Buchung bestätigen</option></select><p>Reservierungen sperren die Tage sofort. Im automatischen Modus werden Reservierungs- und Buchungsbestätigung direkt verschickt. Bereits offene Anfragen bleiben unverändert.</p><button class="btn btn--primary">Einstellung speichern</button></form></section>
+      <section class="panel"><h2>Zeitraum blockieren</h2><form id="block" class="booking-form"><label for="trailer">Anhänger</label><select id="trailer" name="trailer"><option value="1">3-Seitenkipper 3,5 t</option><option value="2">Planenanhänger 2,7 t</option></select><div class="form-row form-row--2"><div><label for="from">Erster Tag</label><input id="from" name="date_from" type="date" required></div><div><label for="to">Letzter Tag</label><input id="to" name="date_to" type="date" required></div></div><label for="note">Grund (optional, nur intern)</label><input id="note" name="note" maxlength="2000" placeholder="z. B. Eigenbedarf oder Wartung"><button class="btn btn--primary">Tage blockieren</button></form></section>
+    </div>
+    <section class="panel"><h2>Belegungskalender</h2><div class="admin-tools"><label>Anhänger <select id="calendar-trailer"><option value="1">3-Seitenkipper 3,5 t</option><option value="2">Planenanhänger 2,7 t</option></select></label><button type="button" id="prev" class="btn" aria-label="Vorheriger Monat">←</button><strong id="month"></strong><button type="button" id="next" class="btn" aria-label="Nächster Monat">→</button></div><div class="admin-calendar" id="calendar"></div><p><span class="badge pending">Reserviert</span> <span class="badge confirmed">Gebucht</span> <span class="badge blocked">Blockiert</span> · Beide Miettage zählen vollständig.</p></section>
+    <section class="panel"><div class="admin-tools"><h2>Reservierungen und Buchungen</h2><label>Status <select id="filter"><option value="active">Alle aktiven</option><option value="pending">Offene Reservierungen</option><option value="confirmed">Bestätigte Buchungen</option><option value="blocked">Eigene Blockierungen</option><option value="cancelled">Storniert / aufgehoben</option></select></label><button id="refresh" class="btn">Aktualisieren</button></div><p id="mail-status"></p><button id="retry-mail" class="btn" hidden>E-Mail-Versand erneut versuchen</button><div id="bookings" class="admin-bookings"></div></section>
+  </div>
+</main><script src="js/admin.js"></script></body></html>

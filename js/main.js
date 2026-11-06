@@ -33,11 +33,37 @@ document.addEventListener('DOMContentLoaded', () => {
   let view  = firstMonth;
   let start = null;
   let end   = null;
+  let availabilityReady = false;
+  let periods = [];
+  const bookingSubmit = document.querySelector('#bookingForm button[type="submit"]');
+  bookingSubmit.disabled = true;
+
+  async function loadAvailability() {
+    try {
+      const response = await fetch('api/index.php?action=availability', { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Verfügbarkeit konnte nicht geladen werden.');
+      periods = data.periods;
+      availabilityReady = true;
+      bookingSubmit.disabled = false;
+      document.querySelector('#bookingForm .form-note').textContent = data.mode === 'automatic'
+        ? 'Nach dem Absenden wird deine Buchung automatisch bestätigt. Du erhältst eine Reservierungs- und eine Buchungsbestätigung per E-Mail.'
+        : 'Deine Tage werden sofort reserviert. Du erhältst eine E-Mail zur Reservierung und nach manueller Freigabe eine Buchungsbestätigung.';
+      renderCalendar();
+      return true;
+    } catch (error) {
+      availabilityReady = false;
+      bookingSubmit.disabled = true;
+      setHint('Online-Reservierung momentan nicht verfügbar. Bitte telefonisch melden: 0171 3363915.', true);
+      renderCalendar();
+      return false;
+    }
+  }
 
   function bookedDays() {
     const set = new Set();
-    (window.BELEGUNG?.[trailerSelect.value] || []).forEach(entry => {
-      const [a, b = a] = entry.split('/');
+    periods.filter(entry => entry.trailer === trailerSelect.value).forEach(entry => {
+      const a = entry.date_from, b = entry.date_to;
       for (let d = fromIso(a); d <= fromIso(b); d.setDate(d.getDate() + 1)) set.add(toIso(d));
     });
     return set;
@@ -76,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.dataset.date = iso;
       btn.setAttribute('aria-label', fmt(iso));
 
-      if (iso < todayIso) btn.disabled = true;
+      if (iso < todayIso || !availabilityReady || !trailerSelect.value) btn.disabled = true;
       if (booked.has(iso)) {
         btn.disabled = true;
         btn.classList.add('is-booked');
@@ -171,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     trailerSelect.value = btn.dataset.book;
     trailerSelect.dispatchEvent(new Event('change'));
     bookingDialog.showModal();
+    loadAvailability();
   }));
 
   // ---- Brennholz: Längen & Preisberechnung ----
@@ -241,11 +268,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  handleForm('bookingForm', 'Buchungsanfrage gesendet!', () => {
-    if (dateFrom.value) return true;
-    setHint('Bitte im Kalender einen Zeitraum auswählen.', true);
-    calGrid.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return false;
+  document.getElementById('bookingForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!dateFrom.value || !availabilityReady) {
+      setHint('Bitte einen verfügbaren Zeitraum auswählen.', true);
+      return;
+    }
+    bookingSubmit.disabled = true;
+    try {
+      const response = await fetch('api/index.php?action=reserve', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        if (response.status === 409) { start = end = null; updateSummary(); await loadAvailability(); }
+        throw new Error(data.error || 'Reservierung fehlgeschlagen.');
+      }
+      const success = document.createElement('div');
+      success.className = 'form-success';
+      success.style.display = 'block';
+      success.setAttribute('role', 'status');
+      success.textContent = data.status === 'confirmed'
+        ? `Deine Buchung ist bestätigt. Referenz: ${data.id}. Reservierungs- und Buchungsbestätigung werden per E-Mail verschickt.`
+        : `Deine Tage sind reserviert. Referenz: ${data.id}. Du erhältst eine E-Mail zur Reservierung und nach Prüfung eine Buchungsbestätigung.`;
+      e.target.parentNode.append(success);
+      e.target.reset(); start = end = null; updateSummary();
+      await loadAvailability();
+      setHint('Ersten Miettag anklicken, dann den letzten.');
+      setTimeout(() => success.remove(), 30000);
+    } catch (error) {
+      setHint(error.message || 'Reservierung fehlgeschlagen. Bitte telefonisch melden.', true);
+    } finally { bookingSubmit.disabled = !availabilityReady; }
   });
   handleForm('woodForm',    'Holzbestellung eingegangen!');
   handleForm('contactForm', 'Nachricht gesendet!');

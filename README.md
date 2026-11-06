@@ -12,7 +12,9 @@ Website für Michael Beer, Langenbach (Bayern).
 - Responsive Design
 
 ## Entwicklung
-Einfach `index.html` im Browser öffnen oder Live Server in VS Code starten.
+Für die statische Ansicht `index.html` im Browser öffnen. Buchungen und Adminbereich benötigen PHP und SQLite. Einrichtung und Betrieb: [EINRICHTUNG.md](EINRICHTUNG.md).
+
+Adminbereich: `/admin.html`. Enthält Reservierungsfreigabe, Stornierung, eigene Terminblockierungen und die Umschaltung zwischen manueller und automatischer Bestätigung.
 
 ## Webdesign
 [ChefBlick](https://chefblick.de) – Stefan Mutter

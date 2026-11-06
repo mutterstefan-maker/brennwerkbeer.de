@@ -32,6 +32,8 @@ try {
     if (!is_file($configPath)) fail('Die Buchungsverwaltung ist noch nicht eingerichtet.', 503);
     $config = require $configPath;
     if (empty($config['password_hash'])) fail('Die Serverkonfiguration ist unvollständig.', 503);
+    if (!extension_loaded('pdo_sqlite')) fail('Die PHP-Erweiterung PDO_SQLite fehlt. Bitte auf dem Server aktivieren.', 503);
+    if (!is_writable(dirname(__DIR__) . '/private')) fail('Das Verzeichnis private ist für PHP nicht beschreibbar. Bitte die Serverrechte prüfen.', 503);
     $db = new PDO('sqlite:' . dirname(__DIR__) . '/private/bookings.sqlite');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $db->exec('PRAGMA busy_timeout = 5000');

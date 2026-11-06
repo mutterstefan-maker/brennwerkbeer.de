@@ -9,8 +9,23 @@
   const fmt = value => value.split('-').reverse().join('.');
   const message = text => { $('message').textContent = text; };
   async function api(action, body) {
-    const response = await fetch(`api/index.php?action=${action}`, { credentials: 'same-origin', ...(body ? { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':csrf}, body:JSON.stringify(body) } : {}) });
-    const data = await response.json().catch(() => { throw new Error('Serverantwort ungültig. Bitte PHP-Konfiguration prüfen.'); });
+    if (location.protocol === 'file:') throw new Error('Der Adminbereich benötigt einen PHP-Webserver. Bitte über die Website auf IONOS oder lokal mit „php -S localhost:8080“ öffnen.');
+    let response;
+    try {
+      response = await fetch(`api/index.php?action=${action}`, { credentials: 'same-origin', cache: 'no-store', ...(body ? { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':csrf}, body:JSON.stringify(body) } : {}) });
+    } catch (error) {
+      throw new Error('Der Buchungsserver ist nicht erreichbar. Bitte Verbindung und Website-Adresse prüfen.');
+    }
+    const raw = await response.text();
+    let data;
+    try { data = JSON.parse(raw); } catch (error) {
+      if (raw.trimStart().startsWith('<?php')) throw new Error('Der Server führt PHP nicht aus. Bitte die Website auf einem PHP-fähigen Server öffnen. VS-Code-Live-Server und GitHub Pages unterstützen das Backend nicht.');
+      if (response.status === 404) throw new Error('Die Buchungs-API fehlt (HTTP 404). Bitte den Ordner „api“ zusammen mit der Website hochladen und den Pfad api/index.php prüfen.');
+      if (response.status === 403) throw new Error('Der Server sperrt den Zugriff auf die Buchungs-API (HTTP 403). Bitte Zugriffsregeln für api/index.php prüfen.');
+      if (response.status >= 500) throw new Error(`PHP-Serverfehler (HTTP ${response.status}). Bitte PHP 8.1 oder neuer aktivieren und das PHP-Fehlerprotokoll prüfen.`);
+      throw new Error(`Unter api/index.php liefert der Server keine JSON-Antwort (HTTP ${response.status}). Bitte prüfen, ob die Adresse auf einen PHP-Webserver zeigt und der Ordner „api“ vorhanden ist.`);
+    }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Die Buchungs-API liefert ein unerwartetes Datenformat. Bitte die hochgeladenen Dateien prüfen.');
     if (!response.ok) { if (response.status === 401) { $('workspace').hidden = true; $('login').hidden = false; $('logout').hidden = true; } throw new Error(data.error || 'Anfrage fehlgeschlagen.'); }
     return data;
   }

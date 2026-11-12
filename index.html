@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=20261112-modern" />
+  <link rel="stylesheet" href="css/style.css?v=20261112-handover" />
 </head>
 <body>
 
@@ -29,7 +29,7 @@
       <nav class="nav__links">
         <a href="#anhaenger">Anhänger</a>
         <a href="#holz">Brennholz</a>
-        <a href="#ablauf">Ablauf</a>
+        <a href="#ablauf">Abholung & Lieferung</a>
         <a href="#kontakt">Kontakt</a>
       </nav>
       <a href="#anhaenger" class="btn btn--primary nav__cta">Anhänger buchen</a>
@@ -40,7 +40,7 @@
     <div class="nav__mobile" id="mobileMenu">
       <a href="#anhaenger">Anhänger</a>
       <a href="#holz">Brennholz</a>
-      <a href="#ablauf">Ablauf</a>
+      <a href="#ablauf">Abholung & Lieferung</a>
       <a href="#kontakt">Kontakt</a>
       <a href="#anhaenger" class="btn btn--primary">Anhänger buchen</a>
     </div>
@@ -52,7 +52,7 @@
       <div class="entry__intro">
         <div>
           <p class="entry__eyebrow">Freising & Umgebung</p>
-          <h1 class="entry__title">Holz fürs Feuer.<br /><span>Platz für mehr.</span></h1>
+          <h1 class="entry__title">Anhängerverleih<br />& Brennholz.</h1>
           <p class="entry__sub">Brennholz direkt zu dir. Anhänger für das, was du vorhast. Persönlich von Michael Beer in Freising.</p>
           <div class="entry__actions">
             <a href="#anhaenger" class="btn btn--primary">Anhänger mieten <span aria-hidden="true">↗</span></a>
@@ -64,8 +64,7 @@
 
       <div class="entry__choices">
         <a href="#anhaenger" class="choice choice--trailer">
-          <span class="choice__number" aria-hidden="true">01 / Anhängerverleih</span>
-          <span class="choice__label">Mehr bewegen.</span>
+          <span class="choice__label">Anhänger mieten</span>
           <span class="choice__price">ab 50&nbsp;€ <small>pro Tag</small></span>
           <span class="choice__list">
             <span><b>3-Seitenkipper 3,5 t</b><i>60 €</i></span>
@@ -76,8 +75,7 @@
         </a>
 
         <a href="#holz" class="choice choice--wood">
-          <span class="choice__number" aria-hidden="true">02 / Brennholz</span>
-          <span class="choice__label">Wärme nach Hause.</span>
+          <span class="choice__label">Brennholz bestellen</span>
           <span class="choice__price">ab 65&nbsp;€ <small>pro Schüttraummeter</small></span>
           <span class="choice__list">
             <span><b>Weichholz</b> Fichte / Kiefer<i>65 €</i></span>
@@ -214,26 +212,20 @@
   </section>
 
   <!-- ========== ABLAUF ========== -->
-  <section class="section section--sand" id="ablauf">
-    <div class="container">
-      <div class="section__header">
-        <p class="section__eyebrow">Ablauf</p>
-        <h2>So läuft's ab</h2>
+  <section class="handover" id="ablauf" aria-labelledby="handoverTitle">
+    <div class="container handover__inner">
+      <figure class="handover__photo">
+        <img src="img/anhaenger/3-seitenkipper-seite.avif" alt="Unser 3-Seitenkipper mit Gitteraufsatz" width="900" height="600" loading="lazy" />
+        <figcaption>Unser 3-Seitenkipper · 3,5 t Gesamtgewicht</figcaption>
+      </figure>
+      <div class="handover__text">
+        <h2 id="handoverTitle">Die Übergabe machen<br />wir persönlich.</h2>
+        <p>Du holst den Anhänger bei Michael Beer in der Kepserstraße 81 in Freising ab. Den Termin stimmen wir vorher mit dir ab. Bring deinen Ausweis und 150 € Kaution mit.</p>
+        <p>Brennholz liefern wir zu dir und kippen es ab. Liefertermin und Kosten klären wir bei deiner Anfrage; eingeräumt wird das Holz nicht.</p>
+        <p class="handover__note">Deine Anfrage ist erst bestätigt, wenn Michael sich bei dir gemeldet hat – in der Regel innerhalb von 24 Stunden.</p>
+        <a class="handover__phone" href="tel:+491713363915">0171 3363915</a>
+        <span class="handover__phone-note">Für Fragen zur Abholung oder Lieferung</span>
       </div>
-      <ol class="steps">
-        <li>
-          <h3>Anfragen</h3>
-          <p>Anhänger und Tage oder Holzsorte und Menge auswählen und die Anfrage abschicken.</p>
-        </li>
-        <li>
-          <h3>Bestätigung</h3>
-          <p>Michael prüft die Anfrage und meldet sich persönlich bei dir – in der Regel innerhalb von 24 Stunden.</p>
-        </li>
-        <li>
-          <h3>Abholen oder liefern lassen</h3>
-          <p>Den Anhänger holst du in Freising ab. Brennholz bringen wir dir vorbei und kippen es ab.</p>
-        </li>
-      </ol>
     </div>
   </section>
 
@@ -243,7 +235,7 @@
       <div>
         <div class="section__header section__header--tight">
           <p class="section__eyebrow">Kontakt</p>
-          <h2>Fragen? Meld dich.</h2>
+          <h2>Michael Beer in Freising</h2>
           <p>Am schnellsten erreichst du Michael telefonisch.</p>
         </div>
         <dl class="contact-list">

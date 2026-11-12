@@ -158,7 +158,7 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 .topbar a { color: #fff; text-decoration: none; font-weight: 600; }
 
 /* ---- EINSTIEG ---- */
-.entry { padding: 64px 0 0; background: radial-gradient(ellipse at 85% 22%, #FF85100D, transparent 55%), #101010; border-bottom: 1px solid var(--line); }
+.entry { padding: 64px 0 0; background: #101010; border-bottom: 1px solid var(--line); }
 .entry__intro { display: grid; grid-template-columns: 1fr 1.1fr; align-items: center; gap: 24px; margin-bottom: 64px; }
 .entry__eyebrow { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .75rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; margin-bottom: 24px; }
 .entry__eyebrow::before { content: ''; width: 24px; height: 2px; background: var(--accent); }
@@ -188,7 +188,6 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 .choice--trailer:hover { background: #FFFFFF04; }
 .choice--wood { background: transparent; border-top: 1px solid var(--line); padding-right: 0; }
 .choice--wood:hover { background: #FFFFFF04; }
-.choice__number { color: var(--muted); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 14px; }
 .choice:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 .choice__label {
   font-family: var(--font-head);
@@ -475,30 +474,17 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 }
 .wood-estimate strong { font-size: 1.1rem; }
 
-/* ---- ABLAUF ---- */
-.steps {
-  list-style: none;
-  counter-reset: step;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
-}
-.steps li {
-  counter-increment: step;
-  border-top: 2px solid var(--ink);
-  padding-top: 18px;
-}
-.steps li::before {
-  content: counter(step) ".";
-  display: block;
-  font-family: var(--font-head);
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--accent);
-  margin-bottom: 6px;
-}
-.steps h3 { margin-bottom: 8px; }
-.steps p { color: var(--muted); }
+/* ---- ABHOLUNG UND LIEFERUNG ---- */
+.handover { padding: 72px 0; background: #D9D6CF; color: #252421; }
+.handover__inner { display: grid; grid-template-columns: 1.15fr 1fr; align-items: center; gap: 64px; }
+.handover__photo { margin: 0; }
+.handover__photo img { width: 100%; height: auto; }
+.handover__photo figcaption { margin-top: 10px; font-size: .8rem; color: #56534D; }
+.handover__text h2 { color: #252421; font-size: clamp(1.8rem, 3vw, 2.4rem); letter-spacing: -.025em; margin-bottom: 22px; }
+.handover__text p { margin-bottom: 16px; }
+.handover__note { font-size: .92rem; color: #56534D; }
+.handover__phone { display: block; width: fit-content; color: #252421; font-size: clamp(1.6rem, 3vw, 2rem); font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 6px; margin-top: 26px; }
+.handover__phone-note { display: block; margin-top: 8px; font-size: .85rem; color: #56534D; }
 
 /* ---- KONTAKT ---- */
 .contact-grid {
@@ -626,6 +612,7 @@ body:has(.modal[open]) { overflow: hidden; }
 
 /* ---- RESPONSIVE ---- */
 @media (max-width: 960px) {
+  .handover__inner { gap: 32px; }
   .nav__inner { gap: 20px; }
   .nav__links { gap: 18px; }
   .booking-layout { grid-template-columns: 1fr; }
@@ -633,6 +620,8 @@ body:has(.modal[open]) { overflow: hidden; }
 }
 
 @media (max-width: 768px) {
+  .handover { padding: 40px 0; }
+  .handover__inner { grid-template-columns: 1fr; gap: 28px; }
   html { scroll-padding-top: 108px; }
   .entry__intro { grid-template-columns: 1fr; gap: 32px; margin-bottom: 40px; }
   .entry__logo { grid-row: 1; width: min(100%, 440px); justify-self: center; }
@@ -649,8 +638,7 @@ body:has(.modal[open]) { overflow: hidden; }
   .choice         { padding: 28px 0; border-right: 0; }
   .topbar__inner  { flex-direction: column; gap: 0; text-align: center; }
   .trailer-grid,
-  .wood-grid,
-  .steps          { grid-template-columns: 1fr; }
+  .wood-grid     { grid-template-columns: 1fr; }
   .form-row--2    { flex-direction: column; }
   .panel          { padding: 22px; }
   .trailer-card__body, .wood-card { padding: 22px; }

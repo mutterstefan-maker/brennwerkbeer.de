@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css?v=20261112-workshop" />
   <link rel="stylesheet" href="css/workshop.css?v=20261112-workshop" />
+  <link rel="stylesheet" href="carousel-assets/carousel.css?v=home-orbit" />
 </head>
 <body>
 
@@ -47,30 +48,10 @@
   </header>
 
   <!-- ========== EINSTIEG ========== -->
-  <section class="machine" id="home" aria-labelledby="machineTitle">
-    <div class="container">
-      <div class="machine__titlebar"><span>Michael Beer / Freising</span><span>Anhängerverleih · Brennholz</span></div>
-      <h1 class="machine__title" id="machineTitle">BRENNWERK<span>BEER</span></h1>
-      <div class="machine__stage">
-        <figure class="machine__photo">
-          <img src="img/anhaenger/3-seitenkipper-seite.avif" alt="Unser 3-Seitenkipper mit Gitteraufsatz auf dem Hof in Freising" width="960" height="720" fetchpriority="high" />
-          <figcaption><span>3-Seitenkipper / mit Gitteraufsatz</span><a href="#anhaenger">Fahrzeug ansehen ↗</a></figcaption>
-        </figure>
-        <aside class="machine__plate" aria-label="Kipper auf einen Blick">
-          <span class="machine__plate-label">Zur Miete in Freising</span>
-          <h2>3-Seiten-<br />kipper</h2>
-          <dl><div><dt>Gesamtgewicht</dt><dd>3,5 t</dd></div><div><dt>Nutzlast</dt><dd>2,5 t</dd></div><div><dt>Ladefläche</dt><dd>4 × 2 m</dd></div></dl>
-          <p class="machine__price">60 € <small>/ Tag</small></p>
-          <button type="button" class="btn btn--primary" data-book="1">Miettage prüfen <span aria-hidden="true">↗</span></button>
-          <span class="machine__plate-note">inkl. Versicherung · 150 € Kaution</span>
-        </aside>
-      </div>
-      <div class="machine__dispatch">
-        <a href="#anhaenger"><strong>Anhänger mieten</strong><span>Kipper & Plane · ab 50 € / Tag</span><b aria-hidden="true">↗</b></a>
-        <a href="#holz"><strong>Brennholz liefern lassen</strong><span>Weich- & Hartholz · ab 65 € / SRM</span><b aria-hidden="true">↗</b></a>
-      </div>
-      <div class="machine__address">Abholung nach Vereinbarung <span>Kepserstraße 81 · 85356 Freising</span></div>
-    </div>
+  <section id="home" aria-labelledby="orbit-title">
+    <h1 id="orbit-title" class="orbit-intro">Brennwerk Beer · Anhänger &amp; Brennholz in Freising</h1>
+    <div id="dish-carousel" data-page="home"></div>
+    <noscript><p>Anhänger ab 50 € / Tag und Brennholz ab 65 € / SRM. <a href="#anhaenger">Zu unseren Angeboten</a></p></noscript>
   </section>
 
   <!-- ========== ANHÄNGER ========== -->
@@ -415,6 +396,7 @@
   </div>
 
   <script src="js/main.js?v=workshop-20261112"></script>
-  <p style="text-align:center;padding:12px;font-size:13px"><a href="orbit-demo.html">Orbit-Carousel · Design-Demo ansehen</a></p>
+
+  <script type="module" src="carousel-assets/carousel.js?v=home-orbit"></script>
 </body>
 </html>

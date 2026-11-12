@@ -21,8 +21,9 @@ Adminbereich: `/admin.html`. Enthält Reservierungsfreigabe, Stornierung, eigene
 
 ## React Orbit Carousel
 
-Die separate Demo liegt unter `/orbit-demo.html` und ist auf der Startseite verlinkt.
-Sie enthält die gelieferten Restaurant-Beispieldaten, keine Angebote von Brennwerk Beer.
+Die Startseite verwendet das Orbit-Carousel für Anhänger und Brennholz (`src/home.tsx`).
+Die ursprüngliche Restaurant-Demo bleibt separat unter `/orbit-demo.html` erreichbar.
+Nur die separate Demo enthält Restaurant-Beispieldaten.
 Die bestehende HTML/PHP-Website läuft weiterhin unabhängig von React.
 
 Einrichtung und Build (Node.js 20.19+ oder 22.12+):

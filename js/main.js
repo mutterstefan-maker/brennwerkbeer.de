@@ -7,13 +7,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
   function setMenu(open) {
+    if (!open) finishMobileNavigation();
     mobileMenu.classList.toggle('open', open);
     mobileMenu.inert = !open;
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Menü schließen' : 'Menü öffnen');
   }
   burger.addEventListener('click', () => setMenu(!mobileMenu.classList.contains('open')));
-  mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenu(false)));
+  let mobileNavigationTimer;
+  function finishMobileNavigation() {
+    window.clearTimeout(mobileNavigationTimer);
+    mobileMenu.querySelectorAll('.is-playing').forEach(link => link.classList.remove('is-playing'));
+  }
+  mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', event => {
+    finishMobileNavigation();
+    if (!link.classList.contains('menu-offer') || window.matchMedia('(prefers-reduced-motion: reduce)').matches || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) { setMenu(false); return; }
+    event.preventDefault();
+    link.classList.add('is-playing');
+    mobileNavigationTimer = window.setTimeout(() => {
+      setMenu(false);
+      link.classList.remove('is-playing');
+      window.location.hash = link.hash;
+      const target = document.querySelector(link.hash);
+      if (target) { target.setAttribute('tabindex', '-1'); target.focus({ preventScroll: true }); }
+    }, 650);
+  }));
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && mobileMenu.classList.contains('open')) { setMenu(false); burger.focus(); }
   });

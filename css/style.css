@@ -690,3 +690,31 @@ body:has(.modal[open]) { overflow: hidden; }
   .nav__links a, .nav__links a::after, .nav__mobile, .nav__mobile a, .nav__burger span { transition: none; }
   .nav__links a::before { animation: none !important; display: none; }
 }
+/* Kleine Angebots-Szenen direkt über den Menüpunkten. */
+.menu-offer { position: relative; }
+.menu-art { position: absolute; left: 50%; bottom: calc(100% - 6px); width: 86px; height: 42px; pointer-events: none; opacity: 0; transform: translateX(-50%); overflow: visible; }
+.menu-art--fire { width: 54px; height: 46px; }
+.menu-offer:is(:hover, :focus-visible, .is-playing) .menu-art { opacity: 1; }
+.menu-offer:is(:hover, :focus-visible, .is-playing) .menu-art--trailer { animation: trailer-arrive 1.5s both; }
+.menu-art__bed { transform-origin: 15px 30px; }
+.menu-offer:is(:hover, :focus-visible, .is-playing) .menu-art__bed { animation: trailer-tip 1.5s both; }
+.menu-art__wheel { transform-box: fill-box; transform-origin: center; }
+.menu-offer:is(:hover, :focus-visible, .is-playing) .menu-art__wheel { animation: trailer-wheel .55s ease-out; }
+.menu-art__flame, .menu-art__flame-core { transform-origin: 35px 43px; }
+.menu-offer:is(:hover, :focus-visible, .is-playing) .menu-art__flame { animation: wood-fire .55s ease-in-out 4 alternate; }
+.menu-offer:is(:hover, :focus-visible, .is-playing) .menu-art__flame-core { animation: wood-fire .35s ease-in-out 6 alternate-reverse; }
+.menu-art__ember { opacity: 0; }
+.menu-offer:is(:hover, :focus-visible, .is-playing) .menu-art__ember { animation: wood-ember .9s .15s 2; }
+.menu-offer:is(:hover, :focus-visible, .is-playing) .menu-art__ember--second { animation-delay: .4s; }
+@keyframes trailer-arrive { 0% { opacity: 0; transform: translateX(calc(-50% - 50px)); } 30% { opacity: 1; transform: translateX(-50%); } 38% { transform: translate(-50%, 2px); } 46%,100% { transform: translate(-50%, 0); } }
+@keyframes trailer-tip { 0%,40%,100% { transform: rotate(0); } 65%,78% { transform: rotate(-23deg); } }
+@keyframes trailer-wheel { from { transform: rotate(-220deg); } to { transform: rotate(0); } }
+@keyframes wood-fire { from { transform: scale(.95, .9) skewX(-3deg); } to { transform: scale(1.03, 1.07) skewX(3deg); } }
+@keyframes wood-ember { 0% { opacity: 0; transform: translateY(6px); } 25% { opacity: 1; } 100% { opacity: 0; transform: translate(5px, -12px); } }
+.nav__mobile .menu-art { left: auto; right: 4px; bottom: 4px; transform: none; }
+.nav__mobile .menu-offer:is(:hover, :focus-visible, .is-playing) .menu-art--trailer { animation: trailer-arrive-mobile .65s both; }
+.nav__mobile .menu-offer.is-playing .menu-art__bed { animation: trailer-tip .65s both; }
+@keyframes trailer-arrive-mobile { from { opacity: 0; transform: translateX(-35px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .menu-art, .menu-art * { animation: none !important; }
+}

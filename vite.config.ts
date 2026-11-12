@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
   plugins: [tailwindcss()],
+  define: { 'process.env.NODE_ENV': JSON.stringify('production') },
   resolve: { alias: { '@': fileURLToPath(new URL('.', import.meta.url)) } },
   build: {
     outDir: 'carousel-assets',

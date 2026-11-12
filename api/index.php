@@ -66,7 +66,7 @@ try {
         $trailer = $b['trailer'] === '1' ? '3-Seitenkipper 3,5 t' : 'Planenanhänger 2,7 t';
         $text = "Hallo {$b['name']},\n\n{$labels[$status]}.\nAnhänger: $trailer\nZeitraum: {$b['date_from']} bis {$b['date_to']} (beide Tage einschließlich)\nReferenz: {$b['id']}\n\n";
         $text .= $status === 'pending' ? "Die Tage sind für dich reserviert. Deine Buchung wird nach manueller Prüfung separat bestätigt.\n" : '';
-        $text .= "\nBei Fragen: 0171 3363915\nMichael Beer";
+        $text .= "\nBei Fragen: +49 171 2015568\nMichael Beer";
         $q = $db->prepare('INSERT INTO outbox (booking_id,recipient,subject,body) VALUES (?,?,?,?)');
         $q->execute([$b['id'], $b['email'], $labels[$status] . ' – Michael Beer', $text]);
     }

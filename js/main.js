@@ -6,11 +6,34 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- Burger menu ----
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
+  const menuClose = document.getElementById('menuClose');
+  let menuClosing = false;
+  let menuTimer;
+  function closeMenu() {
+    if (!mobileMenu.open || menuClosing) return;
+    menuClosing = true;
+    mobileMenu.classList.add('is-closing');
+    menuTimer = window.setTimeout(() => mobileMenu.close(), window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300);
+  }
   burger.addEventListener('click', () => {
-    mobileMenu.classList.toggle('open');
+    if (mobileMenu.open) return;
+    mobileMenu.classList.remove('is-closing');
+    mobileMenu.showModal();
+    burger.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('menu-is-open');
+  });
+  menuClose.addEventListener('click', closeMenu);
+  mobileMenu.addEventListener('cancel', event => { event.preventDefault(); closeMenu(); });
+  mobileMenu.addEventListener('close', () => {
+    window.clearTimeout(menuTimer);
+    menuClosing = false;
+    mobileMenu.classList.remove('is-closing');
+    burger.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('menu-is-open');
   });
   mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => mobileMenu.classList.remove('open'));
+    a.addEventListener('click', () => { mobileMenu.close(); });
+    ['pointerenter', 'focus'].forEach(event => a.addEventListener(event, () => { mobileMenu.dataset.scene = a.dataset.scene; }));
   });
 
   // ---- Buchungskalender ----
@@ -54,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       availabilityReady = false;
       bookingSubmit.disabled = true;
-      setHint('Online-Reservierung momentan nicht verfügbar. Bitte telefonisch melden: 0171 3363915.', true);
+      setHint('Online-Reservierung momentan nicht verfügbar. Bitte telefonisch melden: +49 171 2015568.', true);
       renderCalendar();
       return false;
     }

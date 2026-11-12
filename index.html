@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=202610251726" />
+  <link rel="stylesheet" href="css/style.css?v=20261112-brand" />
 </head>
 <body>
 
@@ -23,9 +23,8 @@
   <!-- ========== NAV ========== -->
   <header class="nav" id="nav">
     <div class="nav__inner container">
-      <a href="index.html" class="nav__logo">
-        <strong>Michael Beer</strong>
-        <span>Anhängerverleih · Brennholz</span>
+      <a href="index.html" class="nav__logo" aria-label="Brennwerk Beer – Startseite">
+        <img class="nav__logo-image" src="img/logo.jpeg" alt="Brennwerk Beer – Kaminholz, Anhängerverleih und Transport" width="1536" height="1024" />
       </a>
       <nav class="nav__links">
         <a href="#anhaenger">Anhänger</a>
@@ -50,8 +49,14 @@
   <!-- ========== EINSTIEG ========== -->
   <section class="entry" id="home">
     <div class="container">
-      <h1 class="entry__title">Anhängerverleih und Brennholz in Freising</h1>
-      <p class="entry__sub">Was brauchst du?</p>
+      <div class="entry__intro">
+        <div>
+          <p class="entry__eyebrow">Brennwerk Beer · Freising</p>
+          <h1 class="entry__title">Anhängerverleih und Brennholz in Freising</h1>
+          <p class="entry__sub">Was brauchst du?</p>
+        </div>
+        <img class="entry__logo" src="img/logo.jpeg" alt="Brennwerk Beer – Kaminholz, Anhängerverleih und Transport" width="1536" height="1024" fetchpriority="high" />
+      </div>
 
       <div class="entry__choices">
         <a href="#anhaenger" class="choice choice--trailer">
@@ -266,7 +271,7 @@
   <footer class="footer">
     <div class="container footer__inner">
       <div class="footer__brand">
-        <strong>Michael Beer</strong>
+        <strong>Brennwerk Beer</strong>
         <p>Anhängerverleih & Brennholz · Kepserstraße 81 · 85356 Freising</p>
       </div>
       <div class="footer__links">

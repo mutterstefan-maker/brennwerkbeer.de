@@ -157,28 +157,6 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 }
 .topbar a { color: #fff; text-decoration: none; font-weight: 600; }
 
-/* ---- EINSTIEG: HOF UND PREISTAFEL ---- */
-.yard { background: #D9D6CF; color: #20201D; padding: 32px 0 48px; }
-.yard__masthead { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; padding-bottom: 24px; }
-.yard__masthead h1 { color: #20201D; font-size: clamp(2rem, 4.4vw, 3.5rem); line-height: .96; letter-spacing: -.04em; text-transform: uppercase; }
-.yard__masthead p { font-size: .88rem; line-height: 1.4; text-align: right; }
-.yard__photo { margin: 0; background: #22221F; color: #E7E5E0; }
-.yard__photo img { width: 100%; height: clamp(280px, 34vw, 430px); object-fit: cover; object-position: center 54%; }
-.yard__photo figcaption { display: flex; justify-content: space-between; gap: 16px; padding: 11px 18px; font-size: .8rem; }
-.yard__photo figcaption a { color: #FFB34D; text-underline-offset: 3px; white-space: nowrap; }
-.yard__tariffs { display: grid; grid-template-columns: 1fr 1fr; background: #F1A332; }
-.yard__offer { display: flex; flex-direction: column; padding: 24px 28px; color: #231A0D; text-decoration: none; transition: background .2s; }
-.yard__offer + .yard__offer { border-left: 1px solid #231A0D55; }
-.yard__offer:hover { background: #FFB54A; }
-.yard__offer:focus-visible { outline: 3px solid #231A0D; outline-offset: -6px; }
-.yard__offer-title { display: flex; justify-content: space-between; gap: 16px; font-size: 1.4rem; font-weight: 700; margin-bottom: 14px; }
-.yard__offer-title > span { transition: transform .2s; }
-.yard__offer:hover .yard__offer-title > span { transform: translate(3px, -3px); }
-.yard__rate { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; border-top: 1px solid #231A0D40; padding: 8px 0; font-size: .95rem; }
-.yard__rate strong { white-space: nowrap; font-size: 1.2rem; }
-.yard__rate small { font-size: .8rem; font-weight: 400; }
-.yard__detail { margin-top: 10px; font-size: .78rem; line-height: 1.4; }
-
 /* ---- SECTIONS ---- */
 .section { padding: 88px 0; }
 .section--sand { background: var(--sand); }
@@ -653,19 +631,4 @@ body:has(.modal[open]) { overflow: hidden; }
 @keyframes trailer-arrive-mobile { from { opacity: 0; transform: translateX(-35px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
   .menu-art, .menu-art * { animation: none !important; }
-}
-
-@media (max-width: 768px) {
-  .yard { padding: 24px 0 32px; }
-  .yard__masthead { align-items: flex-start; gap: 16px; }
-  .yard__masthead h1 { font-size: clamp(1.65rem, 6vw, 2.6rem); }
-  .yard__masthead p { font-size: .7rem; }
-  .yard__photo img { height: auto; aspect-ratio: 4 / 3; }
-  .yard__photo figcaption { flex-direction: column; gap: 6px; }
-  .yard__tariffs { grid-template-columns: 1fr; }
-  .yard__offer { padding: 22px 18px; }
-  .yard__offer + .yard__offer { border-left: 0; border-top: 1px solid #231A0D55; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .yard__offer, .yard__offer-title > span { transition: none; }
 }

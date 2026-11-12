@@ -1,0 +1,173 @@
+/* Brennwerk Beer: Werkstatt, Typenschild und Fahrzeugkatalog. */
+:root {
+  --bg: #242a2e;
+  --surface: #30383e;
+  --sand: #1c2226;
+  --ink: #f0f2f1;
+  --muted: #bcc5ca;
+  --line: #526068;
+  --accent: #ff921e;
+  --accent-dark: #ffad4e;
+  --accent-soft: #433323;
+  --ember: #ffad4e;
+  --ember-dark: #ffc074;
+  --ember-soft: #433323;
+  --radius: 0;
+  --font-head: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-tech: 'IBM Plex Mono', Consolas, monospace;
+}
+.container { max-width: 1320px; padding-inline: 40px; }
+h2 { font-size: clamp(2.3rem, 4vw, 3.7rem); font-weight: 700; line-height: 1; letter-spacing: -.015em; }
+h3 { font-size: 2rem; font-weight: 600; }
+.topbar { background: #151a1d; color: #c1c9ce; font: .7rem var(--font-tech); }
+.topbar__inner { padding-block: 10px; }
+.nav { background: #20262a; border-bottom: 1px solid var(--line); }
+.nav__inner { height: 104px; gap: 28px; }
+.nav__logo-image { width: 132px; }
+.nav__links { gap: 28px; }
+.nav__links a { font: 600 1.15rem var(--font-head); text-transform: uppercase; letter-spacing: .025em; }
+.btn { min-height: 48px; font: 700 1.05rem var(--font-head); text-transform: uppercase; letter-spacing: .045em; padding: 13px 22px; border-width: 1px; box-shadow: inset 0 -3px 0 #0002; }
+.btn--primary, .btn--wood { color: #20180e; }
+.btn--primary:hover, .btn--wood:hover { box-shadow: inset 0 -3px 0 #0003; }
+.nav__cta { font-size: 1rem; }
+.nav__burger { width: 44px; height: 44px; justify-content: center; align-items: center; border: 1px solid var(--line); }
+
+/* Die Startseite ist ein Fahrzeugblatt, mit dem Namen über die ganze Breite. */
+.machine { background: #242a2e; padding: 26px 0 0; }
+.machine__titlebar { display: flex; justify-content: space-between; gap: 16px; font: .68rem var(--font-tech); color: var(--muted); text-transform: uppercase; }
+.machine__title { display: flex; align-items: baseline; justify-content: space-between; gap: .15em; font-size: clamp(4.3rem, 12.5vw, 10.4rem); font-weight: 800; line-height: .92; letter-spacing: -.025em; padding: 12px 0 24px; margin: 0; }
+.machine__title span { color: var(--accent); }
+.machine__stage { position: relative; padding-left: 228px; }
+.machine__photo { margin: 0; background: #161c20; }
+.machine__photo img { width: 100%; aspect-ratio: 1.85; object-fit: cover; object-position: center 53%; }
+.machine__photo figcaption { display: flex; justify-content: space-between; gap: 16px; padding: 12px 20px; color: #bbc5cb; font: .66rem var(--font-tech); text-transform: uppercase; }
+.machine__photo figcaption a { color: var(--accent); text-underline-offset: 4px; }
+.machine__plate { position: absolute; left: 0; top: 30px; width: 268px; padding: 22px; background: #c4cdd0; color: #20292e; border: 1px solid #edf2f3; box-shadow: 8px 8px 0 #12181c50; }
+.machine__plate::before, .machine__plate::after { content: ''; position: absolute; top: 9px; width: 5px; height: 5px; border: 1px solid #7c898e; background: #eef1f1; border-radius: 50%; }
+.machine__plate::before { left: 9px; }
+.machine__plate::after { right: 9px; }
+.machine__plate-label { font: .6rem var(--font-tech); text-transform: uppercase; }
+.machine__plate h2 { color: #20292e; font-size: 3rem; font-weight: 700; line-height: .92; text-transform: uppercase; margin: 16px 0 20px; }
+.machine__plate dl { font: .68rem var(--font-tech); }
+.machine__plate dl div { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-top: 1px solid #7e8c92; }
+.machine__plate dd { font-weight: 500; }
+.machine__price { font: 700 3.4rem/.95 var(--font-head); margin: 18px 0; }
+.machine__price small { font: .75rem var(--font-tech); }
+.machine__plate .btn { display: flex; width: 100%; justify-content: space-between; gap: 12px; }
+.machine__plate-note { display: block; font: .58rem/1.5 var(--font-tech); margin-top: 10px; }
+.machine__dispatch { display: grid; grid-template-columns: 1fr 1fr; margin-top: 28px; border: 1px solid var(--line); }
+.machine__dispatch a { position: relative; display: flex; flex-direction: column; padding: 22px 64px 22px 24px; text-decoration: none; background: #1c2328; border-left: 6px solid var(--accent); transition: background .2s; }
+.machine__dispatch a + a { border-left: 1px solid var(--line); }
+.machine__dispatch a:hover { background: #343d43; }
+.machine__dispatch strong { font: 600 1.65rem var(--font-head); text-transform: uppercase; }
+.machine__dispatch span { font: .7rem/1.5 var(--font-tech); color: var(--muted); margin-top: 4px; }
+.machine__dispatch b { position: absolute; right: 24px; top: 24px; color: var(--accent); font-size: 1.7rem; }
+.machine__address { display: flex; justify-content: space-between; gap: 16px; font: .66rem/1.5 var(--font-tech); color: var(--muted); padding: 16px 0 28px; }
+
+/* Anhänger werden wie Fahrzeugdatenblätter untereinander dargestellt. */
+.section { padding: 68px 0; }
+.section__header { max-width: none; margin-bottom: 32px; border-left: 6px solid var(--accent); padding-left: 20px; }
+.section__eyebrow { font: .65rem var(--font-tech); letter-spacing: .06em; margin-bottom: 10px; }
+.section__header p:not(.section__eyebrow) { font-size: 1rem; margin-top: 12px; }
+#anhaenger { background: #1b2226; border-block: 1px solid var(--line); }
+.trailer-grid { grid-template-columns: 1fr; gap: 24px; }
+.trailer-card { display: grid; grid-template-columns: 1.2fr 1fr; border: 1px solid #56636b; background: #2a3339; }
+.trailer-card__img { aspect-ratio: auto; min-height: 370px; }
+.trailer-card__photo { object-fit: cover; }
+.trailer-card__body { padding: 28px 32px; }
+.trailer-card__head { align-items: center; }
+.trailer-card__head h3 { font-size: 2.2rem; }
+.trailer-card__price { font: .7rem var(--font-tech); }
+.trailer-card__price strong { font-size: 2.7rem; line-height: 1; }
+.trailer-card__desc { font-size: .98rem; }
+.trailer-specs { font: .73rem/1.6 var(--font-tech); column-gap: 20px; }
+.trailer-specs dt { font-size: .67rem; }
+.terms { background: #242e34; border: 1px solid var(--line); border-left: 5px solid var(--accent); font-size: .9rem; }
+
+/* Holz: eine Liefer- und Preisliste statt einer zweiten Fahrzeuggalerie. */
+#holz { background: #343d43; }
+.wood-grid { gap: 0; border: 1px solid #68767e; }
+.wood-card { border: 0; border-top: 5px solid var(--accent); padding: 32px; background: transparent; }
+.wood-card + .wood-card { border-left: 1px solid #68767e; }
+.wood-card h3 { font-size: 2.8rem; text-transform: uppercase; }
+.wood-card__species { font: .73rem/1.6 var(--font-tech); margin-top: 6px; }
+.wood-card__desc, .wood-card__lengths { font-size: .95rem; }
+.wood-prices dd { font-size: 2.1rem; }
+.wood-prices dt { font-size: .95rem; }
+.wood-prices dt small { display: block; margin-left: 0; }
+.wood-card .btn { align-self: flex-start; min-width: 230px; width: auto; }
+.handover { background: #aebbc2; color: #1f2c33; }
+.handover__text h2 { color: #1f2c33; font-size: clamp(2.5rem, 4vw, 3.6rem); text-transform: uppercase; }
+.handover__photo { padding: 10px; border: 1px solid #6a7d88; background: #c7d1d6; }
+.handover__photo figcaption { font: .62rem/1.5 var(--font-tech); color: #344852; }
+.handover__note, .handover__phone-note { color: #344852; }
+.handover__phone { font-family: var(--font-head); font-size: 2.6rem; color: #1f2c33; }
+#kontakt { background: #1b2226; }
+.contact-grid { grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); padding: 0; max-width: 1240px; }
+.contact-grid > div { background: var(--accent); padding: 36px; color: #251b10; }
+.contact-grid .section__header { border-left: 0; padding: 0; }
+.contact-grid h2, .contact-grid .section__eyebrow, .contact-grid .section__header p, .contact-grid .contact-list a { color: #251b10; }
+.contact-list, .contact-list div { border-color: #251b1050; }
+.contact-list a { overflow-wrap: anywhere; }
+.contact-grid .panel { border: 0; background: #283138; padding: 36px; }
+.form-group input, .form-group select, .form-group textarea { background: #1d252a; border-color: #7c8c96; }
+.footer { background: #151b1f; border-top: 6px solid var(--accent); }
+.footer__brand strong { font-size: 1.8rem; text-transform: uppercase; }
+.footer__copy { border-color: var(--line); font: .66rem/1.6 var(--font-tech); }
+.legal-page { padding-top: 48px; }
+
+@media (min-width: 1600px) { .machine__title { font-size: 10.8rem; } }
+@media (max-width: 1100px) {
+  .nav__links { gap: 18px; }
+  .nav__inner { gap: 20px; }
+  .nav__cta { padding-inline: 16px; }
+  .machine__photo img { aspect-ratio: 1.4; }
+  .trailer-card { grid-template-columns: 1fr 1fr; }
+  .trailer-specs { grid-template-columns: 1fr; }
+  .contact-grid { margin-inline: 40px; }
+}
+@media (max-width: 960px) {
+  .container { padding-inline: 20px; }
+  .nav__inner { height: 88px; }
+  .nav__logo-image { width: 114px; }
+  .machine { padding-top: 20px; }
+  .machine__titlebar { font-size: .52rem; }
+  .machine__title { font-size: clamp(3.6rem, 13.8vw, 6.8rem); padding-bottom: 20px; }
+  .machine__stage { padding-left: 0; display: flex; flex-direction: column; }
+  .machine__photo img { aspect-ratio: 4 / 3; }
+  .machine__photo figcaption { padding: 10px; flex-wrap: wrap; font-size: .56rem; }
+  .machine__plate { position: relative; top: auto; width: 100%; box-shadow: none; padding: 20px; margin-top: 0; }
+  .machine__plate h2 { font-size: 2.5rem; margin: 10px 0; }
+  .machine__plate h2 br { display: none; }
+  .machine__plate dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .machine__plate dl div { flex-direction: column; gap: 6px; }
+  .machine__plate dt { font-size: .55rem; }
+  .machine__plate dd { font-size: .8rem; }
+  .machine__price { font-size: 2.8rem; margin: 14px 0; }
+  .machine__dispatch { grid-template-columns: 1fr; margin-top: 20px; }
+  .machine__dispatch a { padding: 18px 48px 18px 18px; }
+  .machine__dispatch a + a { border-left: 6px solid var(--accent); border-top: 1px solid var(--line); }
+  .machine__dispatch strong { font-size: 1.45rem; }
+  .machine__dispatch span { font-size: .62rem; }
+  .machine__address { flex-direction: column; gap: 4px; font-size: .6rem; }
+  .section { padding: 44px 0; }
+  .section__header { padding-left: 16px; }
+  .trailer-card { grid-template-columns: 1fr; }
+  .trailer-card__img { min-height: 0; aspect-ratio: 4 / 3; }
+  .trailer-card__body { padding: 22px; }
+  .trailer-specs { grid-template-columns: 1fr 1fr; }
+  .wood-grid { grid-template-columns: 1fr; }
+  .wood-card { padding: 24px; }
+  .wood-card + .wood-card { border-left: 0; border-top: 1px solid #68767e; }
+  .contact-grid { margin-inline: 20px; padding: 0; grid-template-columns: 1fr; }
+  .contact-grid > div, .contact-grid .panel { padding: 24px; }
+  .handover__text h2 { font-size: 2.5rem; }
+}
+@media (max-width: 380px) {
+  .machine__titlebar { flex-direction: column; gap: 4px; }
+  .machine__title { font-size: 13vw; }
+  .trailer-specs { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .machine__dispatch a { transition: none; }
+}

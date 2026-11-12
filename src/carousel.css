@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #f7f4ee;
+  --color-foreground: #272822;
+  --color-primary: #af4c22;
+  --color-muted-foreground: #64665d;
+}
+
+body { margin: 0; background: var(--color-background); color: var(--color-foreground); font-family: system-ui, sans-serif; }
+.demo-header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px; font-size: 14px; }
+.demo-header a { color: inherit; text-underline-offset: 4px; }
+.demo-note { max-width: 760px; margin: 0 auto; padding: 30px 24px; font-size: 14px; line-height: 1.6; }
+.dsh-root { --color-background: #f7f4ee; --color-foreground: #272822; --color-primary: #af4c22; --color-muted-foreground: #64665d; }
+@media (max-width: 639px) { .dsh-root { overflow-y: auto; } }

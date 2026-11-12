@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=20261112-menu" />
+  <link rel="stylesheet" href="css/style.css?v=20261112-navlinks" />
 </head>
 <body>
 
@@ -26,37 +26,23 @@
       <a href="index.html" class="nav__logo" aria-label="Brennwerk Beer – Startseite">
         <img class="nav__logo-image" src="img/logo-trans.png" alt="Brennwerk Beer – Kaminholz, Anhängerverleih und Transport" width="1536" height="1024" />
       </a>
-      <nav class="nav__links">
+      <nav class="nav__links" aria-label="Hauptnavigation">
         <a href="#anhaenger">Anhänger</a>
         <a href="#holz">Brennholz</a>
         <a href="#ablauf">Abholung & Lieferung</a>
         <a href="#kontakt">Kontakt</a>
       </nav>
       <a href="#anhaenger" class="btn btn--primary nav__cta">Anhänger buchen</a>
-      <button class="nav__burger" id="burger" aria-label="Menü öffnen" aria-haspopup="dialog" aria-controls="mobileMenu" aria-expanded="false">
+      <button class="nav__burger" id="burger" aria-label="Menü öffnen" aria-controls="mobileMenu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
-    <dialog class="workshop-menu" id="mobileMenu" aria-labelledby="menuTitle" data-scene="trailer">
-      <div class="workshop-menu__head">
-        <span id="menuTitle">Brennwerk Beer / Freising</span>
-        <button type="button" class="workshop-menu__close" id="menuClose" aria-label="Menü schließen">Schließen <span aria-hidden="true">×</span></button>
-      </div>
-      <div class="workshop-menu__body">
-        <nav class="workshop-menu__links" aria-label="Hauptnavigation">
-          <a href="#anhaenger" data-scene="trailer"><span>Anhänger</span><small>Mieten. Anhängen. Losfahren.</small></a>
-          <a href="#holz" data-scene="wood"><span>Brennholz</span><small>Fichte, Kiefer, Buche & mehr.</small></a>
-          <a href="#ablauf" data-scene="trailer"><span>Abholung & Lieferung</span></a>
-          <a href="#kontakt" data-scene="wood"><span>Michael erreichen</span></a>
-        </nav>
-        <div class="workshop-menu__visual" aria-hidden="true">
-          <img class="workshop-menu__trailer" src="img/anhaenger/3-seitenkipper-seite.avif" alt="" width="900" height="600" />
-          <img class="workshop-menu__brand" src="img/logo-trans.png" alt="" width="1536" height="1024" />
-          <span class="workshop-menu__caption">Kepserstraße 81 · Freising</span>
-        </div>
-      </div>
-      <div class="workshop-menu__foot">Anhängerverleih & Brennholz · Michael Beer</div>
-    </dialog>
+    <nav class="nav__mobile" id="mobileMenu" aria-label="Mobile Navigation" inert>
+      <a href="#anhaenger">Anhänger</a>
+      <a href="#holz">Brennholz</a>
+      <a href="#ablauf">Abholung & Lieferung</a>
+      <a href="#kontakt">Kontakt</a>
+    </nav>
   </header>
 
   <!-- ========== EINSTIEG ========== -->
@@ -442,6 +428,6 @@
     <a href="https://wa.me/491712015568?text=Hallo%20Michael%2C%20ich%20habe%20eine%20Frage%3A%20" class="quick-contact__wa" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><span>WhatsApp</span></a>
   </div>
 
-  <script src="js/main.js?v=menu-20261112"></script>
+  <script src="js/main.js?v=navlinks-20261112"></script>
 </body>
 </html>

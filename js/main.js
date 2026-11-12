@@ -6,35 +6,39 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- Burger menu ----
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
-  const menuClose = document.getElementById('menuClose');
-  let menuClosing = false;
-  let menuTimer;
-  function closeMenu() {
-    if (!mobileMenu.open || menuClosing) return;
-    menuClosing = true;
-    mobileMenu.classList.add('is-closing');
-    menuTimer = window.setTimeout(() => mobileMenu.close(), window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 300);
+  function setMenu(open) {
+    mobileMenu.classList.toggle('open', open);
+    mobileMenu.inert = !open;
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Menü schließen' : 'Menü öffnen');
   }
-  burger.addEventListener('click', () => {
-    if (mobileMenu.open) return;
-    mobileMenu.classList.remove('is-closing');
-    mobileMenu.showModal();
-    burger.setAttribute('aria-expanded', 'true');
-    document.body.classList.add('menu-is-open');
+  burger.addEventListener('click', () => setMenu(!mobileMenu.classList.contains('open')));
+  mobileMenu.querySelectorAll('a').forEach(link => link.addEventListener('click', () => setMenu(false)));
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && mobileMenu.classList.contains('open')) { setMenu(false); burger.focus(); }
   });
-  menuClose.addEventListener('click', closeMenu);
-  mobileMenu.addEventListener('cancel', event => { event.preventDefault(); closeMenu(); });
-  mobileMenu.addEventListener('close', () => {
-    window.clearTimeout(menuTimer);
-    menuClosing = false;
-    mobileMenu.classList.remove('is-closing');
-    burger.setAttribute('aria-expanded', 'false');
-    document.body.classList.remove('menu-is-open');
-  });
-  mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => { mobileMenu.close(); });
-    ['pointerenter', 'focus'].forEach(event => a.addEventListener(event, () => { mobileMenu.dataset.scene = a.dataset.scene; }));
-  });
+  const mobileWidth = window.matchMedia('(max-width: 960px)');
+  mobileWidth.addEventListener('change', () => setMenu(false));
+
+  // Aktuellen Abschnitt anhand seiner Position unter dem Kopfbereich markieren.
+  const navLinks = [...document.querySelectorAll('.nav__links a, .nav__mobile a')];
+  const sections = [...document.querySelectorAll('#anhaenger, #holz, #ablauf, #kontakt')];
+  let scrollQueued = false;
+  function updateSection() {
+    const offset = document.getElementById('nav').getBoundingClientRect().height + 64;
+    let active = '';
+    sections.forEach(section => { if (section.getBoundingClientRect().top <= offset) active = section.id; });
+    navLinks.forEach(link => {
+      if (link.hash === '#' + active) link.setAttribute('aria-current', 'location');
+      else link.removeAttribute('aria-current');
+    });
+    scrollQueued = false;
+  }
+  window.addEventListener('scroll', () => {
+    if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(updateSection); }
+  }, { passive: true });
+  window.addEventListener('resize', updateSection);
+  updateSection();
 
   // ---- Buchungskalender ----
   const trailerSelect = document.getElementById('trailer-select');

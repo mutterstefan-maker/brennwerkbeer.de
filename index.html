@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=20261112-offer-motion" />
+  <link rel="stylesheet" href="css/style.css?v=20261112-yard" />
 </head>
 <body>
 
@@ -46,42 +46,28 @@
   </header>
 
   <!-- ========== EINSTIEG ========== -->
-  <section class="entry" id="home">
+  <section class="yard" id="home" aria-labelledby="yardTitle">
     <div class="container">
-      <div class="entry__intro">
-        <div>
-          <p class="entry__eyebrow">Freising & Umgebung</p>
-          <h1 class="entry__title">Anhängerverleih<br />& Brennholz.</h1>
-          <p class="entry__sub">Brennholz direkt zu dir. Anhänger für das, was du vorhast. Persönlich von Michael Beer in Freising.</p>
-          <div class="entry__actions">
-            <a href="#anhaenger" class="btn btn--primary">Anhänger mieten <span aria-hidden="true">↗</span></a>
-            <a href="#holz" class="entry__link">Brennholz bestellen <span aria-hidden="true">→</span></a>
-          </div>
-        </div>
-        <img class="entry__logo" src="img/logo-trans.png" alt="Brennwerk Beer – Kaminholz, Anhängerverleih und Transport" width="1536" height="1024" fetchpriority="high" />
+      <div class="yard__masthead">
+        <h1 id="yardTitle">Anhängerverleih<br />& Brennholz</h1>
+        <p>Michael Beer<br />Kepserstraße 81<br /><strong>85356 Freising</strong></p>
       </div>
-
-      <div class="entry__choices">
-        <a href="#anhaenger" class="choice choice--trailer">
-          <span class="choice__label">Anhänger mieten</span>
-          <span class="choice__price">ab 50&nbsp;€ <small>pro Tag</small></span>
-          <span class="choice__list">
-            <span><b>3-Seitenkipper 3,5 t</b><i>60 €</i></span>
-            <span><b>Planenanhänger 2,7 t</b><i>50 €</i></span>
-          </span>
-          <span class="choice__foot">inkl. Versicherung · Abholung in Freising</span>
-          <span class="choice__more">Anhänger ansehen und buchen <span aria-hidden="true">→</span></span>
+      <figure class="yard__photo">
+        <img src="img/anhaenger/3-seitenkipper-seite.avif" alt="Unser 3-Seitenkipper mit Gitteraufsatz vor dem Brennholzstapel in Freising" width="960" height="720" fetchpriority="high" />
+        <figcaption><span>Bei uns in Freising: der 3-Seitenkipper mit Gitteraufsatz.</span><a href="#anhaenger">Bilder & technische Daten →</a></figcaption>
+      </figure>
+      <div class="yard__tariffs">
+        <a class="yard__offer" href="#anhaenger">
+          <span class="yard__offer-title">Anhänger mieten <span aria-hidden="true">↗</span></span>
+          <span class="yard__rate"><span>3-Seitenkipper · 3,5 t</span><strong>60 € <small>/ Tag</small></strong></span>
+          <span class="yard__rate"><span>Planenanhänger · 2,7 t</span><strong>50 € <small>/ Tag</small></strong></span>
+          <span class="yard__detail">Inkl. Versicherung · Abholung nach Vereinbarung</span>
         </a>
-
-        <a href="#holz" class="choice choice--wood">
-          <span class="choice__label">Brennholz bestellen</span>
-          <span class="choice__price">ab 65&nbsp;€ <small>pro Schüttraummeter</small></span>
-          <span class="choice__list">
-            <span><b>Weichholz</b> Fichte / Kiefer<i>65 €</i></span>
-            <span><b>Hartholz</b> Buche, Eiche, Esche, Ahorn<i>100 €</i></span>
-          </span>
-          <span class="choice__foot">gespalten · geliefert und abgekippt · bis 8 SRM</span>
-          <span class="choice__more">Brennholz bestellen <span aria-hidden="true">→</span></span>
+        <a class="yard__offer" href="#holz">
+          <span class="yard__offer-title">Brennholz bestellen <span aria-hidden="true">↗</span></span>
+          <span class="yard__rate"><span>Weichholz · Fichte / Kiefer</span><strong>65 € <small>/ SRM</small></strong></span>
+          <span class="yard__rate"><span>Hartholz · Buche, Eiche & mehr</span><strong>100 € <small>/ SRM</small></strong></span>
+          <span class="yard__detail">Gespalten · Lieferung bis 8 Schüttraummeter zzgl. Lieferkosten</span>
         </a>
       </div>
     </div>

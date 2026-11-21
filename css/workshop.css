@@ -32,6 +32,45 @@ h3 { font-size: 2rem; font-weight: 600; }
 .nav__cta { font-size: 1rem; }
 .nav__burger { width: 44px; height: 44px; justify-content: center; align-items: center; border: 1px solid var(--line); }
 
+.logo-intro {
+  --logo-scroll-distance: min(34svh, 250px);
+  --logo-sticky-top: 105px;
+  --logo-zoom: .42;
+  background: #151a1d;
+}
+.logo-intro__stage {
+  display: grid;
+  place-items: center;
+  overflow: clip;
+  padding-block: 16px;
+  background: radial-gradient(ellipse at center, #32271e, #151a1d 72%);
+}
+.logo-intro__stage img {
+  display: block;
+  width: min(84%, 680px, 77svh);
+  height: auto;
+  transform-origin: 50% 60%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .logo-intro.is-scrollable::after {
+    content: '';
+    display: block;
+    height: var(--logo-scroll-distance);
+  }
+  .logo-intro.is-scrollable .logo-intro__stage {
+    position: sticky;
+    top: var(--logo-sticky-top);
+  }
+  .logo-intro.is-scrollable img { transform: scale(calc(1 + var(--logo-progress, 0) * var(--logo-zoom))); }
+}
+@media (max-width: 960px) {
+  .logo-intro {
+    --logo-scroll-distance: min(21svh, 125px);
+    --logo-sticky-top: 89px;
+    --logo-zoom: .18;
+  }
+}
+
 /* Die Startseite ist ein Fahrzeugblatt, mit dem Namen über die ganze Breite. */
 .machine { background: #242a2e; padding: 26px 0 0; }
 .machine__titlebar { display: flex; justify-content: space-between; gap: 16px; font: .68rem var(--font-tech); color: var(--muted); text-transform: uppercase; }

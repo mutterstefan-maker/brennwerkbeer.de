@@ -41,9 +41,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // Aktuellen Abschnitt anhand seiner Position unter dem Kopfbereich markieren.
   const navLinks = [...document.querySelectorAll('.nav__links a, .nav__mobile a')];
   const sections = [...document.querySelectorAll('#anhaenger, #holz, #ablauf, #kontakt')];
+  const nav = document.getElementById('nav');
+  const logoIntro = document.querySelector('.logo-intro');
+  const logoStage = logoIntro?.querySelector('.logo-intro__stage');
+  const logoMotion = window.matchMedia('(prefers-reduced-motion: no-preference)');
+  logoIntro?.classList.add('is-scrollable');
   let scrollQueued = false;
   function updateSection() {
-    const offset = document.getElementById('nav').getBoundingClientRect().height + 64;
+    const offset = nav.getBoundingClientRect().height + 64;
+    if (logoStage && logoMotion.matches) {
+      const intro = logoIntro.getBoundingClientRect();
+      const stage = logoStage.getBoundingClientRect();
+      const distance = intro.height - stage.height;
+      const stickyTop = parseFloat(getComputedStyle(logoStage).top);
+      const progress = Math.max(0, Math.min(1, (stickyTop - intro.top) / Math.max(1, distance)));
+      const eased = progress * progress * (3 - 2 * progress);
+      logoIntro.style.setProperty('--logo-progress', eased);
+    }
     let active = '';
     sections.forEach(section => { if (section.getBoundingClientRect().top <= offset) active = section.id; });
     navLinks.forEach(link => {
@@ -56,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(updateSection); }
   }, { passive: true });
   window.addEventListener('resize', updateSection);
+  logoMotion.addEventListener('change', updateSection);
   updateSection();
 
   // ---- Buchungskalender ----

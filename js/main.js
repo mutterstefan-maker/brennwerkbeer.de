@@ -43,20 +43,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const sections = [...document.querySelectorAll('#anhaenger, #holz, #ablauf, #kontakt')];
   const nav = document.getElementById('nav');
   const logoIntro = document.querySelector('.logo-intro');
-  const logoStage = logoIntro?.querySelector('.logo-intro__stage');
+  const logoWatermark = document.querySelector('.logo-watermark');
   const logoMotion = window.matchMedia('(prefers-reduced-motion: no-preference)');
-  logoIntro?.classList.add('is-scrollable');
   let scrollQueued = false;
   function updateSection() {
-    const offset = nav.getBoundingClientRect().height + 64;
-    if (logoStage && logoMotion.matches) {
-      const intro = logoIntro.getBoundingClientRect();
-      const stage = logoStage.getBoundingClientRect();
-      const distance = intro.height - stage.height;
-      const stickyTop = parseFloat(getComputedStyle(logoStage).top);
-      const progress = Math.max(0, Math.min(1, (stickyTop - intro.top) / Math.max(1, distance)));
-      const eased = progress * progress * (3 - 2 * progress);
-      logoIntro.style.setProperty('--logo-progress', eased);
+    const navHeight = nav.getBoundingClientRect().height;
+    const offset = navHeight + 64;
+    if (logoIntro && logoWatermark && logoMotion.matches) {
+      const introBottom = logoIntro.getBoundingClientRect().bottom;
+      const distance = Math.max(0, navHeight - introBottom);
+      const fade = Math.min(1, distance / 160);
+      logoWatermark.style.setProperty('--logo-opacity', fade * 0.16);
+      logoWatermark.style.setProperty('--logo-shift', `${24 - Math.min(84, distance * 0.035)}px`);
     }
     let active = '';
     sections.forEach(section => { if (section.getBoundingClientRect().top <= offset) active = section.id; });
@@ -70,8 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!scrollQueued) { scrollQueued = true; requestAnimationFrame(updateSection); }
   }, { passive: true });
   window.addEventListener('resize', updateSection);
-  logoMotion.addEventListener('change', updateSection);
-  updateSection();
+  function updateLogoMotion() {
+    document.body.classList.toggle('has-logo-watermark', Boolean(logoWatermark && logoMotion.matches));
+    updateSection();
+  }
+  logoMotion.addEventListener('change', updateLogoMotion);
+  updateLogoMotion();
 
   // ---- Buchungskalender ----
   const trailerSelect = document.getElementById('trailer-select');

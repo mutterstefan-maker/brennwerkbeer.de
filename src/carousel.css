@@ -21,6 +21,9 @@ body:has(.demo-header) { margin: 0; background: var(--color-background); color: 
 .home-orbit .dsh-num { white-space: nowrap; font-size: 30px; top: 10px; }
 .home-orbit .dsh-badge { width: 85px; }
 .home-orbit .dsh-orbit > img { border-radius: 20px; }
+.home-orbit .dsh-th .dsh-btn { width: 108px; }
+.home-orbit .dsh-th img { width: 96px; height: 68px; }
+.home-orbit .dsh-th span { max-width: 100%; }
 .home-orbit .dsh-head h2 { color: inherit; }
 .home-orbit .dsh-acts { gap: 20px; }
 .home-orbit .dsh-acts .dsh-btn { padding: 12px 16px; border-radius: 999px; background: #272822; color: #fff; font-size: 12px; }

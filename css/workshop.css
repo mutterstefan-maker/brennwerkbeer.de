@@ -33,42 +33,41 @@ h3 { font-size: 2rem; font-weight: 600; }
 .nav__burger { width: 44px; height: 44px; justify-content: center; align-items: center; border: 1px solid var(--line); }
 
 .logo-intro {
-  --logo-scroll-distance: min(34svh, 250px);
-  --logo-sticky-top: 105px;
-  --logo-zoom: .42;
   background: #151a1d;
 }
 .logo-intro__stage {
   display: grid;
   place-items: center;
-  overflow: clip;
-  padding-block: 16px;
-  background: radial-gradient(ellipse at center, #32271e, #151a1d 72%);
 }
 .logo-intro__stage img {
   display: block;
-  width: min(84%, 680px, 77svh);
+  width: min(100%, 1100px, 115svh);
   height: auto;
-  transform-origin: 50% 60%;
 }
+.home-page { isolation: isolate; }
+.logo-watermark { display: none; }
 @media (prefers-reduced-motion: no-preference) {
-  .logo-intro.is-scrollable::after {
-    content: '';
+  .home-page.has-logo-watermark #anhaenger,
+  .home-page.has-logo-watermark #kontakt { background: #1b222618; }
+  .home-page.has-logo-watermark #holz { background: #343d4370; }
+  .has-logo-watermark .logo-watermark {
+    --watermark-width: min(94vw, 1280px, 155svh);
     display: block;
-    height: var(--logo-scroll-distance);
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    margin: auto;
+    width: var(--watermark-width);
+    height: calc(var(--watermark-width) * 941 / 1672);
+    pointer-events: none;
+    opacity: var(--logo-opacity, 0);
+    transform: translateY(var(--logo-shift, 0px));
+    background: url("../img/logo.jpeg?v=20261122") center / contain no-repeat;
+    mask-image: radial-gradient(ellipse 52% 53% at 50% 56%, #000 52%, transparent);
   }
-  .logo-intro.is-scrollable .logo-intro__stage {
-    position: sticky;
-    top: var(--logo-sticky-top);
-  }
-  .logo-intro.is-scrollable img { transform: scale(calc(1 + var(--logo-progress, 0) * var(--logo-zoom))); }
 }
-@media (max-width: 960px) {
-  .logo-intro {
-    --logo-scroll-distance: min(21svh, 125px);
-    --logo-sticky-top: 89px;
-    --logo-zoom: .18;
-  }
+@media (max-width: 600px) {
+  .logo-intro__stage img { width: 100%; }
 }
 
 /* Die Startseite ist ein Fahrzeugblatt, mit dem Namen über die ganze Breite. */

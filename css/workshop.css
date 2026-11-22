@@ -22,28 +22,45 @@ h3 { font-size: 2rem; font-weight: 600; }
 .topbar { background: #151a1d; color: #c1c9ce; font: .7rem var(--font-tech); }
 .topbar__inner { padding-block: 10px; }
 .nav { background: #20262a; border-bottom: 1px solid var(--line); }
-.nav__inner { height: 104px; gap: 28px; }
-.nav__logo-image { width: 132px; }
-.nav__links { gap: 28px; }
+.nav__inner { height: 72px; gap: 28px; }
+.nav__links { gap: 28px; margin-left: 0; }
 .nav__links a { font: 600 1.15rem var(--font-head); text-transform: uppercase; letter-spacing: .025em; }
 .btn { min-height: 48px; font: 700 1.05rem var(--font-head); text-transform: uppercase; letter-spacing: .045em; padding: 13px 22px; border-width: 1px; box-shadow: inset 0 -3px 0 #0002; }
 .btn--primary, .btn--wood { color: #20180e; }
 .btn--primary:hover, .btn--wood:hover { box-shadow: inset 0 -3px 0 #0003; }
-.nav__cta { font-size: 1rem; }
+.nav__cta { margin-left: auto; font-size: 1rem; }
 .nav__burger { width: 44px; height: 44px; justify-content: center; align-items: center; border: 1px solid var(--line); }
 
 .logo-intro {
-  background: #151a1d;
+  background: #f7f4ee;
 }
 .logo-intro__stage {
+  position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
+  overflow: clip;
+}
+.logo-intro__stage::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -24px;
+  background: url("../img/logo.jpeg?v=20261122") center / cover no-repeat;
+  filter: blur(30px);
+  opacity: .45;
+  mask-image: linear-gradient(to bottom, transparent 24px, #000 26%, #000 74%, transparent calc(100% - 24px));
 }
 .logo-intro__stage img {
   display: block;
   width: min(100%, 1100px, 115svh);
   height: auto;
+  mask-image:
+    linear-gradient(to right, transparent, #000 10%, #000 90%, transparent),
+    linear-gradient(to bottom, transparent, #000 9%, #000 97%, transparent);
+  mask-composite: intersect;
 }
+html:has(.home-page) { scroll-padding-top: 96px; }
 .home-page { isolation: isolate; }
 .logo-watermark { display: none; }
 @media (prefers-reduced-motion: no-preference) {
@@ -67,7 +84,11 @@ h3 { font-size: 2rem; font-weight: 600; }
   }
 }
 @media (max-width: 600px) {
-  .logo-intro__stage img { width: 100%; }
+  .logo-intro__stage img {
+    width: 100%;
+    mask-image: linear-gradient(to bottom, transparent, #000 7%, #000 97%, transparent);
+    mask-composite: add;
+  }
 }
 
 /* Die Startseite ist ein Fahrzeugblatt, mit dem Namen über die ganze Breite. */
@@ -166,8 +187,8 @@ h3 { font-size: 2rem; font-weight: 600; }
 }
 @media (max-width: 960px) {
   .container { padding-inline: 20px; }
-  .nav__inner { height: 88px; }
-  .nav__logo-image { width: 114px; }
+  html:has(.home-page) { scroll-padding-top: 84px; }
+  .nav__inner { height: 64px; }
   .machine { padding-top: 20px; }
   .machine__titlebar { font-size: .52rem; }
   .machine__title { font-size: clamp(3.6rem, 13.8vw, 6.8rem); padding-bottom: 20px; }

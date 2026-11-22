@@ -369,11 +369,13 @@ export function DishOrbitCarousel({
   const steps = scrollSteps(n, loop)
   useEffect(() => {
     const track = trackRef.current
-    if (!track || steps < 1 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const root = rootRef.current
+    if (!track || !root || steps < 1 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const stickyTop = () => parseFloat(getComputedStyle(root).top) || 0
     const trigger = ScrollTrigger.create({
       trigger: track,
-      start: "top top",
-      end: "bottom bottom",
+      start: () => "top " + stickyTop() + "px",
+      end: () => stickyTop() ? "bottom " + (stickyTop() + root.offsetHeight) + "px" : "bottom bottom",
       snap: { snapTo: 1 / steps, duration: { min: 0.3, max: 0.8 }, delay: 0.08, ease: "power2.inOut" },
       onUpdate: (self) => {
         // Looping: the last stretch shows the first dish, so jump back to the top unseen.

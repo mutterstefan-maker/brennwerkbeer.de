@@ -590,10 +590,33 @@ body:has(.modal[open]) { overflow: hidden; }
 .nav__mobile.open { max-height: 340px; padding: 8px 24px 20px; opacity: 1; visibility: visible; border-top: 1px solid var(--line); }
 .nav__mobile a { transition: color .2s, transform .25s; }
 .nav__mobile a:hover, .nav__mobile a[aria-current] { color: var(--accent); transform: translateX(6px); }
-.nav__burger span { transition: transform .25s, opacity .2s; }
+.nav__burger {
+  position: relative;
+  transition: background-color .2s, border-color .2s, scale .15s;
+}
+.nav__burger:is(:hover, :focus-visible, :active, [aria-expanded="true"]) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.nav__burger:active { scale: .92; }
+.nav__burger::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 2px solid var(--accent);
+  pointer-events: none;
+  opacity: 0;
+}
+.nav__burger[aria-expanded="true"]::after { animation: menu-button-pulse .45s ease-out; }
+.nav__burger span { transition: transform .25s, opacity .2s, background-color .2s; }
+.nav__burger[aria-expanded="true"] span { background: var(--accent); }
 .nav__burger[aria-expanded="true"] span:first-child { transform: translateY(7px) rotate(45deg); }
 .nav__burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .nav__burger[aria-expanded="true"] span:last-child { transform: translateY(-7px) rotate(-45deg); }
+@keyframes menu-button-pulse {
+  from { opacity: .75; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.4); }
+}
 @media (max-width: 960px) {
   .nav__links { display: none; }
   .nav__cta { margin-left: auto; }
@@ -601,7 +624,9 @@ body:has(.modal[open]) { overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .nav__links a, .nav__links a::after, .nav__mobile, .nav__mobile a, .nav__burger span { transition: none; }
+  .nav__links a, .nav__links a::after, .nav__mobile, .nav__mobile a, .nav__burger, .nav__burger span { transition: none; }
+  .nav__burger:active { scale: 1; }
+  .nav__burger[aria-expanded="true"]::after { animation: none; }
   .nav__links a::before { animation: none !important; display: none; }
 }
 /* Kleine Angebots-Szenen direkt über den Menüpunkten. */

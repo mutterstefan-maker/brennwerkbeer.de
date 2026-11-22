@@ -162,12 +162,22 @@ html:has(.home-page) { scroll-padding-top: 96px; }
 .handover__note, .handover__phone-note { color: #344852; }
 .handover__phone { font-family: var(--font-head); font-size: 2.6rem; color: #1f2c33; }
 #kontakt { background: #1b2226; }
-.contact-grid { grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); padding: 0; max-width: 1240px; }
+.contact-grid {
+  width: calc(100% - clamp(24px, 6vw, 80px));
+  max-width: 1240px;
+  margin-inline: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--line);
+  padding: 0;
+}
+.contact-grid > *, .contact-grid .form-group { min-width: 0; }
 .contact-grid > div { background: var(--accent); padding: 36px; color: #251b10; }
 .contact-grid .section__header { border-left: 0; padding: 0; }
 .contact-grid h2, .contact-grid .section__eyebrow, .contact-grid .section__header p, .contact-grid .contact-list a { color: #251b10; }
 .contact-list, .contact-list div { border-color: #251b1050; }
-.contact-list a { overflow-wrap: anywhere; }
+.contact-list div { grid-template-columns: minmax(0, 6em) minmax(0, 1fr); }
+.contact-list dd { overflow-wrap: anywhere; }
 .contact-grid .panel { border: 0; background: #283138; padding: 36px; }
 .form-group input, .form-group select, .form-group textarea { background: #1d252a; border-color: #7c8c96; }
 .footer { background: #151b1f; border-top: 6px solid var(--accent); }
@@ -183,7 +193,6 @@ html:has(.home-page) { scroll-padding-top: 96px; }
   .machine__photo img { aspect-ratio: 1.4; }
   .trailer-card { grid-template-columns: 1fr 1fr; }
   .trailer-specs { grid-template-columns: 1fr; }
-  .contact-grid { margin-inline: 40px; }
 }
 @media (max-width: 960px) {
   .container { padding-inline: 20px; }
@@ -218,9 +227,12 @@ html:has(.home-page) { scroll-padding-top: 96px; }
   .wood-grid { grid-template-columns: 1fr; }
   .wood-card { padding: 24px; }
   .wood-card + .wood-card { border-left: 0; border-top: 1px solid #68767e; }
-  .contact-grid { margin-inline: 20px; padding: 0; grid-template-columns: 1fr; }
-  .contact-grid > div, .contact-grid .panel { padding: 24px; }
+  .contact-grid { padding: 0; grid-template-columns: minmax(0, 1fr); }
+  .contact-grid > div, .contact-grid .panel { padding: clamp(16px, 5vw, 24px); }
   .handover__text h2 { font-size: 2.5rem; }
+}
+@media (max-width: 420px) {
+  .contact-list div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
 @media (max-width: 380px) {
   .machine__titlebar { flex-direction: column; gap: 4px; }

@@ -13,5 +13,5 @@ export default function Home() {
     if (button) button.click()
     else window.location.hash = index < 2 ? 'anhaenger' : 'holz'
   }
-  return <DishOrbitCarousel dishes={offers} loop={false} offerMode height="max(700px, 100svh)" onOrder={order} onPlay={(_, i) => { window.location.hash = i < 2 ? 'anhaenger' : 'holz' }} className="home-orbit" />
+  return <DishOrbitCarousel dishes={offers} loop={false} offerMode height="calc(max(700px, 100svh) - var(--dsh-header-offset, 0px))" onOrder={order} onPlay={(_, i) => { window.location.hash = i < 2 ? 'anhaenger' : 'holz' }} className="home-orbit" />
 }

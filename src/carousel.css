@@ -29,4 +29,10 @@ body:has(.demo-header) { margin: 0; background: var(--color-background); color: 
 .home-orbit .dsh-acts .dsh-btn { padding: 12px 16px; border-radius: 999px; background: #272822; color: #fff; font-size: 12px; }
 .home-orbit .dsh-acts .dsh-btn:first-child { background: transparent; color: #272822; }
 .orbit-intro { background: #f7f4ee; color: #272822; margin: 0; padding: 22px 24px; text-align: center; font-size: clamp(22px, 4vw, 42px); }
-@media(max-width:639px) { .home-orbit .dsh-card { margin-bottom: 24px; } .home-orbit .dsh-acts { gap: 8px; } }
+@media (max-width: 639px) {
+  .home-orbit { --dsh-header-offset: 65px; }
+  .home-orbit .dsh-root { top: var(--dsh-header-offset); }
+  .home-orbit .dsh-canvas { padding-top: 24px; }
+  .home-orbit .dsh-card { margin-bottom: 24px; }
+  .home-orbit .dsh-acts { gap: 8px; }
+}

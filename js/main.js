@@ -2,7 +2,10 @@
 // Michael Beer – main.js
 // =============================================
 
+import { createBookingDemo, DEMO_STORAGE_KEY, isBookingDemoLocation, mountDemoBanner } from './booking-demo.js?v=20261122-admin-demo';
+
 document.addEventListener('DOMContentLoaded', () => {
+  const bookingDemo = isBookingDemoLocation() ? createBookingDemo() : null;
   // ---- Burger menu ----
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
@@ -100,12 +103,24 @@ document.addEventListener('DOMContentLoaded', () => {
   let bookingEnabled = false;
   let bookingInProgress = false;
   let availabilityRequest = 0;
+  let demoGeneration = null;
   let periods = [];
   const bookingSubmit = document.querySelector('#bookingForm button[type="submit"]');
   bookingSubmit.disabled = true;
 
   function updateBookingSubmit() {
     bookingSubmit.disabled = !availabilityReady || !bookingEnabled || bookingInProgress;
+  }
+
+  async function bookingRequest(action, body) {
+    if (bookingDemo) return bookingDemo.request(action, body);
+    const response = await fetch(`api/index.php?action=${action}`, {
+      cache: 'no-store',
+      ...(body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}),
+    });
+    const data = await response.json();
+    if (!response.ok) throw Object.assign(new Error(data.error || 'Anfrage fehlgeschlagen.'), { status: response.status });
+    return data;
   }
 
   async function loadAvailability() {
@@ -116,11 +131,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setHint('Verfügbarkeit wird geladen …');
     renderCalendar();
     try {
-      const response = await fetch('api/index.php?action=availability', { cache: 'no-store' });
-      const data = await response.json();
+      const data = await bookingRequest('availability');
       if (request !== availabilityRequest) return false;
-      if (!response.ok) throw new Error(data.error || 'Verfügbarkeit konnte nicht geladen werden.');
       if (!Array.isArray(data.periods)) throw new Error('Ungültige Verfügbarkeitsdaten.');
+      if (bookingDemo && demoGeneration && demoGeneration !== data.demo_generation) {
+        start = end = null; view = firstMonth;
+        document.querySelectorAll('[data-booking-success]').forEach(success => success.remove());
+        fillDemoCustomer();
+      }
+      demoGeneration = data.demo_generation;
       periods = data.periods;
       if (/^\d{4}-\d{2}-\d{2}$/.test(data.today)) {
         todayIso = data.today;
@@ -132,7 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
       bookingEnabled = data.booking_enabled !== false;
       availabilityReady = true;
       updateBookingSubmit();
-      document.querySelector('#bookingForm .form-note').textContent = !bookingEnabled
+      document.querySelector('#bookingForm .form-note').textContent = bookingDemo
+        ? 'Demo: Deine Testbuchung erscheint in der Demo-Verwaltung. Es entstehen keine echten Buchungen und es werden keine E-Mails versendet.'
+        : !bookingEnabled
         ? 'Online-Reservierung momentan nicht verfügbar. Bitte telefonisch reservieren: +49 171 2015568.'
         : data.mode === 'automatic'
         ? 'Nach dem Absenden wird deine Buchung automatisch bestätigt. Du erhältst eine Reservierungs- und eine Buchungsbestätigung per E-Mail.'
@@ -381,37 +402,77 @@ document.addEventListener('DOMContentLoaded', () => {
     bookingInProgress = true;
     updateBookingSubmit();
     try {
-      const response = await fetch('api/index.php?action=reserve', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        if (response.status === 409) { start = end = null; updateSummary(); await loadAvailability(); }
-        throw new Error(data.error || 'Reservierung fehlgeschlagen.');
-      }
+      const data = await bookingRequest('reserve', Object.fromEntries(new FormData(e.target)));
       const success = document.createElement('div');
       success.className = 'form-success';
+      success.dataset.bookingSuccess = 'true';
       success.style.display = 'block';
       success.setAttribute('role', 'status');
-      success.textContent = data.status === 'confirmed'
+      success.textContent = bookingDemo
+        ? `${data.status === 'confirmed' ? 'Demo-Buchung bestätigt.' : 'Demo-Reservierung eingegangen.'} Referenz: ${data.id}. Die gewählten Tage sind jetzt im Demo-Kalender belegt.`
+        : data.status === 'confirmed'
         ? `Deine Buchung ist bestätigt. Referenz: ${data.id}. Reservierungs- und Buchungsbestätigung werden per E-Mail verschickt.`
         : `Deine Tage sind reserviert. Referenz: ${data.id}. Du erhältst eine E-Mail zur Reservierung und nach Prüfung eine Buchungsbestätigung.`;
       e.target.parentNode.append(success);
+      if (bookingDemo) {
+        const adminLink = document.createElement('a');
+        adminLink.className = 'btn btn--primary';
+        adminLink.href = `admin.html?demo=kalender&booking=${encodeURIComponent(data.id)}#bookings`;
+        adminLink.target = '_blank'; adminLink.rel = 'noopener';
+        adminLink.textContent = 'In der Demo-Verwaltung ansehen';
+        success.append(document.createElement('br'), adminLink);
+        success.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+      }
       const selectedTrailer = trailerSelect.value;
       e.target.reset();
       trailerSelect.value = selectedTrailer;
       start = end = null;
       updateTrailerName();
       updateSummary();
+      if (bookingDemo) fillDemoCustomer();
       await loadAvailability();
       setTimeout(() => success.remove(), 30000);
     } catch (error) {
+      if (error.status === 409) { start = end = null; updateSummary(); await loadAvailability(); }
       setHint(error.message || 'Reservierung fehlgeschlagen. Bitte telefonisch melden.', true);
     } finally { bookingInProgress = false; updateBookingSubmit(); }
   });
   handleForm('woodForm',    'Holzbestellung eingegangen!');
   handleForm('contactForm', 'Nachricht gesendet!');
+
+  function fillDemoCustomer() {
+    document.getElementById('book-name').value = 'Max Mustermann';
+    document.getElementById('book-phone').value = '01234 567890';
+    document.getElementById('book-email').value = 'demo@example.com';
+    document.getElementById('book-note').value = 'Testbuchung für die Vorführung';
+  }
+
+  if (bookingDemo) {
+    document.title = 'Kalender-Demo – Brennwerk Beer';
+    bookingSubmit.textContent = 'Demo-Buchung testen';
+    bookingDialog.querySelector('.modal__eyebrow').textContent = 'Kalender-Demo';
+    document.querySelector('.footer__links a[href="admin.html"]').href = 'admin.html?demo=kalender';
+    const note = document.createElement('p');
+    note.className = 'booking-demo-note';
+    note.textContent = 'Vorführung: Bitte nur Testdaten verwenden. Die Testbuchung kannst du anschließend im Demo-Adminbereich bestätigen oder stornieren.';
+    bookingDialog.querySelector('.modal__body').prepend(note);
+    fillDemoCustomer();
+    mountDemoBanner({
+      onOpen: () => document.querySelector('[data-book="1"]').click(),
+      onReset: () => {
+        bookingDemo.reset();
+        start = end = null; view = firstMonth;
+        document.querySelectorAll('[data-booking-success]').forEach(success => success.remove());
+        updateSummary(); fillDemoCustomer();
+        if (bookingDialog.open) loadAvailability();
+      },
+    });
+    const refreshDemo = () => { if (bookingDialog.open && !bookingInProgress) loadAvailability(); };
+    window.addEventListener('storage', event => { if (event.key === DEMO_STORAGE_KEY) refreshDemo(); });
+    window.addEventListener('focus', refreshDemo);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDemo(); });
+    if (new URLSearchParams(location.search).get('demo') === 'kalender') document.querySelector('[data-book="1"]').click();
+  }
 
   // ---- Smooth anchor scrolling with nav offset ----
   document.querySelectorAll('a[href^="#"]').forEach(a => {

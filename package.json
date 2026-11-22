@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node scripts/serve.mjs --dev",
     "start": "node scripts/serve.mjs",
+    "test:calendar-demo": "node --test tests/booking-demo.test.mjs",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit"
   },

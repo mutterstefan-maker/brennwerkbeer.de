@@ -16,6 +16,15 @@ Für den funktionsfähigen Buchungskalender `npm start` ausführen und `http://1
 
 Adminbereich: `/admin.html`. Enthält Reservierungsfreigabe, Stornierung, eigene Terminblockierungen und die Umschaltung zwischen manueller und automatischer Bestätigung.
 
+## Kalender und Verwaltung vorführen
+
+Kundensicht: [Kalender-Demo](https://mutterstefan-maker.github.io/brennwerkbeer.de/index.html?demo=kalender).
+Verwaltung: [Demo-Adminbereich](https://mutterstefan-maker.github.io/brennwerkbeer.de/admin.html?demo=kalender).
+
+Beide Links im selben Browser öffnen. In der Kundensicht sind Testkontaktdaten ausgefüllt und Beispielbelegungen sichtbar. Freie Tage wählen und „Demo-Buchung testen“ anklicken. Die Buchung erscheint sofort als Reservierung in der Demo-Verwaltung. Dort kann sie bestätigt oder storniert werden; Storno gibt die Tage wieder frei. Eigene Blockierungen und automatische Bestätigung können ebenfalls vorgeführt werden.
+
+Auf GitHub Pages ist die Demo automatisch aktiv. Auf dem PHP-Webspace wird sie ausschließlich mit `?demo=kalender` eingeschaltet. Sie benötigt kein PHP und keinen Adminzugang, versendet keine E-Mails und verändert die echte Buchungsdatenbank nicht. Demo-Daten werden getrennt im Browser gespeichert; bitte nur Testdaten eingeben. „Demo zurücksetzen“ stellt die Beispielbelegungen wieder her. An einem neuen Tag startet die Demo frisch.
+
 ## Webdesign
 [ChefBlick](https://chefblick.de) – Stefan Mutter
 

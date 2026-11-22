@@ -303,6 +303,23 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 }
 
 /* ---- KALENDER ---- */
+.booking-demo-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 20px clamp(20px, 4vw, 56px); background: #292216; border-bottom: 1px solid var(--accent);
+}
+.booking-demo-banner > div:first-child { max-width: 740px; min-width: 0; }
+.booking-demo-banner strong { color: var(--accent); font-size: 1.15rem; }
+.booking-demo-banner p { margin: 4px 0; font-size: 1rem; }
+.booking-demo-banner small { display: block; color: var(--muted); font-size: .875rem; line-height: 1.5; }
+.booking-demo-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.booking-demo-actions .btn { white-space: normal; }
+.booking-demo-note { padding: 12px 16px; margin-bottom: 22px; border-left: 3px solid var(--accent); background: var(--accent-soft); font-size: .95rem; }
+.form-success .btn { margin-top: 16px; }
+.admin-booking--highlight { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+@media (max-width: 960px) {
+  .booking-demo-banner { flex-direction: column; align-items: stretch; gap: 16px; }
+}
+
 .calendar {
   border: 1px solid var(--line);
   border-radius: var(--radius);

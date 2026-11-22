@@ -15629,13 +15629,13 @@ function Ub({
               ] }, P);
             }) })
           ] }),
-          /* @__PURE__ */ ot.jsxs("div", { className: "dsh-strip", children: [
-            /* @__PURE__ */ ot.jsx("button", { type: "button", className: "dsh-btn dsh-arrow", "aria-label": p ? "Vorheriges Angebot" : "Previous dish", onClick: () => It(-1), children: /* @__PURE__ */ ot.jsx("svg", { viewBox: "0 0 12 16", "aria-hidden": "true", children: /* @__PURE__ */ ot.jsx("path", { d: "M11 0v16L0 8z" }) }) }),
+          !p && /* @__PURE__ */ ot.jsxs("div", { className: "dsh-strip", children: [
+            /* @__PURE__ */ ot.jsx("button", { type: "button", className: "dsh-btn dsh-arrow", "aria-label": "Previous dish", onClick: () => It(-1), children: /* @__PURE__ */ ot.jsx("svg", { viewBox: "0 0 12 16", "aria-hidden": "true", children: /* @__PURE__ */ ot.jsx("path", { d: "M11 0v16L0 8z" }) }) }),
             /* @__PURE__ */ ot.jsx("div", { className: "dsh-win", children: /* @__PURE__ */ ot.jsx("div", { className: "dsh-track", style: { transform: "translateX(" + -ut * M0 + "px)" }, children: g.map((Z, P) => /* @__PURE__ */ ot.jsx("div", { className: "dsh-th", children: /* @__PURE__ */ ot.jsxs("button", { type: "button", className: "dsh-btn", "aria-current": P === b ? "true" : void 0, onClick: () => Nt(P), children: [
               /* @__PURE__ */ ot.jsx("img", { src: Z.image, alt: "", width: 56, height: 56, draggable: !1 }),
               /* @__PURE__ */ ot.jsx("span", { children: Z.label ?? Z.title + " " + Z.subtitle })
             ] }) }, P)) }) }),
-            /* @__PURE__ */ ot.jsx("button", { type: "button", className: "dsh-btn dsh-arrow", "aria-label": p ? "Nächstes Angebot" : "Next dish", onClick: () => It(1), children: /* @__PURE__ */ ot.jsx("svg", { viewBox: "0 0 12 16", "aria-hidden": "true", children: /* @__PURE__ */ ot.jsx("path", { d: "M1 0v16l11-8z" }) }) })
+            /* @__PURE__ */ ot.jsx("button", { type: "button", className: "dsh-btn dsh-arrow", "aria-label": "Next dish", onClick: () => It(1), children: /* @__PURE__ */ ot.jsx("svg", { viewBox: "0 0 12 16", "aria-hidden": "true", children: /* @__PURE__ */ ot.jsx("path", { d: "M1 0v16l11-8z" }) }) })
           ] })
         ] }),
         /* @__PURE__ */ ot.jsx("p", { className: "dsh-sr", "aria-live": "polite", children: nt ? "Dish " + (b + 1) + " of " + v + ": " + nt.title + " " + nt.subtitle : "" })

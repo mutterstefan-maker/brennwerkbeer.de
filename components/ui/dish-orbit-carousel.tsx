@@ -544,8 +544,8 @@ export function DishOrbitCarousel({
           </div>
         </div>
 
-        <div className="dsh-strip">
-          <button type="button" className="dsh-btn dsh-arrow" aria-label={offerMode ? "Vorheriges Angebot" : "Previous dish"} onClick={() => step(-1)}>
+        {!offerMode && <div className="dsh-strip">
+          <button type="button" className="dsh-btn dsh-arrow" aria-label="Previous dish" onClick={() => step(-1)}>
             <svg viewBox="0 0 12 16" aria-hidden="true"><path d="M11 0v16L0 8z" /></svg>
           </button>
           <div className="dsh-win">
@@ -560,10 +560,10 @@ export function DishOrbitCarousel({
               ))}
             </div>
           </div>
-          <button type="button" className="dsh-btn dsh-arrow" aria-label={offerMode ? "Nächstes Angebot" : "Next dish"} onClick={() => step(1)}>
+          <button type="button" className="dsh-btn dsh-arrow" aria-label="Next dish" onClick={() => step(1)}>
             <svg viewBox="0 0 12 16" aria-hidden="true"><path d="M1 0v16l11-8z" /></svg>
           </button>
-        </div>
+        </div>}
 
       </div>
       <p className="dsh-sr" aria-live="polite">{dish ? "Dish " + (index + 1) + " of " + n + ": " + dish.title + " " + dish.subtitle : ""}</p>

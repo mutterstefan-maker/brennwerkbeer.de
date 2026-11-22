@@ -12,7 +12,7 @@ Website für Michael Beer, Langenbach (Bayern).
 - Responsive Design
 
 ## Entwicklung
-Für die statische Ansicht `index.html` im Browser öffnen. Buchungen und Adminbereich benötigen PHP und SQLite. Einrichtung und Betrieb: [EINRICHTUNG.md](EINRICHTUNG.md).
+Für den funktionsfähigen Buchungskalender `npm start` ausführen und `http://127.0.0.1:8080/` öffnen. Der Startbefehl verwendet installiertes PHP oder die lokale Laufzeit unter `.runtime/php/php.exe` und aktiviert PDO_SQLite. Mit `BRENNWERK_PHP` kann eine andere PHP-Datei gewählt werden; `BRENNWERK_PORT` ändert den Port. Einrichtung und Betrieb: [EINRICHTUNG.md](EINRICHTUNG.md).
 
 Adminbereich: `/admin.html`. Enthält Reservierungsfreigabe, Stornierung, eigene Terminblockierungen und die Umschaltung zwischen manueller und automatischer Bestätigung.
 
@@ -33,7 +33,7 @@ npm install
 npm run build
 ```
 
-Zum lokalen Entwickeln `npm run dev` starten und `/src/dev.html` öffnen.
+Zum lokalen Entwickeln `npm run dev` starten. Die Startseite und die Buchungsverwaltung verwenden dann ebenfalls den automatisch gestarteten PHP-Buchungsserver. Die separate React-Vorschau ist unter `/src/dev.html` erreichbar. Private Konfiguration, Datenbank und Laufzeitdateien sind in beiden lokalen Vorschauen gesperrt.
 Für die Veröffentlichung `orbit-demo.html` und den erzeugten Ordner `carousel-assets/`
 zusammen mit der bestehenden Website auf den PHP-Webspace kopieren.
 

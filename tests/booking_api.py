@@ -44,16 +44,19 @@ with tempfile.TemporaryDirectory() as directory:
     work = Path(directory)
     (work / 'api').mkdir()
     (work / 'private').mkdir()
+    (work / 'scripts').mkdir()
     shutil.copy(root / 'api/index.php', work / 'api/index.php')
+    shutil.copy(root / 'scripts/router.php', work / 'scripts/router.php')
     password_hash = subprocess.check_output([str(php), '-r', "echo password_hash('integration-test-password', PASSWORD_DEFAULT);"], text=True)
-    (work / 'private/config.php').write_text("<?php return ['password_hash'=>'" + password_hash + "','mail_from'=>'booking@example.com'];", encoding='utf-8')
+    config = "<?php return ['password_hash'=>'" + password_hash + "','mail_from'=>'booking@example.com'];"
+    (work / 'private/config.php').write_text(config, encoding='utf-8')
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
     command = [str(php), '-d', f'session.save_path={work}', '-d', 'default_socket_timeout=1', '-d', 'SMTP=127.0.0.1', '-d', f'smtp_port={smtp.server_address[1]}']
     if sys.platform == 'win32':
         command += ['-d', f'extension_dir={php.parent / "ext"}', '-d', 'extension=pdo_sqlite']
-    command += ['-S', f'127.0.0.1:{port}', '-t', str(work)]
+    command += ['-S', f'127.0.0.1:{port}', '-t', str(work), str(work / 'scripts/router.php')]
     with (work / 'server.log').open('w') as log:
         server = subprocess.Popen(command, stdout=log, stderr=log)
         try:
@@ -75,6 +78,19 @@ with tempfile.TemporaryDirectory() as directory:
                 except urllib.error.URLError:
                     time.sleep(.1)
             assert status == 200 and data['mode'] == 'manual', (status, data)
+            assert data['booking_enabled'] is True
+            assert data['today'] < data['max_date']
+            for path in ('/private/config.php', '/private/bookings.sqlite', '/scripts/router.php', '/.git/config', '/.runtime/php/php.exe'):
+                try:
+                    urllib.request.urlopen(f'http://127.0.0.1:{port}{path}', timeout=4)
+                    raise AssertionError(f'Privater Pfad erreichbar: {path}')
+                except urllib.error.HTTPError as error:
+                    assert error.code == 403, (path, error.code)
+            (work / 'private/config.php').write_text(config.replace('booking@example.com', ''), encoding='utf-8')
+            assert request('availability')[1]['booking_enabled'] is False
+            assert request('reserve', {})[0] == 503
+            (work / 'private/config.php').write_text(config, encoding='utf-8')
+            assert request('availability')[1]['booking_enabled'] is True
             assert request('admin')[0] == 401
             assert request('login', {'username': 'Admin', 'password': 'wrong'})[0] == 401
             assert request('login', {'username': 'Andere', 'password': 'integration-test-password'})[0] == 401
@@ -121,7 +137,7 @@ with tempfile.TemporaryDirectory() as directory:
             assert request('admin')[1]['unsent'] == 0
             assert request('logout', {}, csrf)[0] == 200
             assert request('admin')[0] == 401
-            print('PASS: Login, CSRF, Tagesreservierung, Konflikte, Freigabe, Storno, Blockierung, automatischer Modus, konkurrierende Anfragen, E-Mail-Warteschlange, Datenschutz, Logout')
+            print('PASS: Kalenderbereitschaft, geschuetzte Vorschau, Login, CSRF, Tagesreservierung, Konflikte, Freigabe, Storno, Blockierung, automatischer Modus, konkurrierende Anfragen, E-Mail-Warteschlange, Datenschutz, Logout')
         finally:
             server.terminate()
             server.wait(timeout=10)

@@ -87,7 +87,13 @@ try {
     }
     if ($action === 'availability' && $method === 'GET') {
         $rows = $db->query("SELECT trailer,date_from,date_to FROM bookings WHERE status IN ('pending','confirmed','blocked') AND date_to >= date('now','-1 day')")->fetchAll(PDO::FETCH_ASSOC);
-        reply(['periods' => $rows, 'mode' => $db->query('SELECT mode FROM settings WHERE id=1')->fetchColumn()]);
+        reply([
+            'periods' => $rows,
+            'mode' => $db->query('SELECT mode FROM settings WHERE id=1')->fetchColumn(),
+            'booking_enabled' => (bool)filter_var($config['mail_from'] ?? '', FILTER_VALIDATE_EMAIL),
+            'today' => date('Y-m-d'),
+            'max_date' => date('Y-m-d', strtotime('+2 years')),
+        ]);
     }
     if ($action === 'login' && $method === 'POST') {
         throttle($db, 'login', 10);

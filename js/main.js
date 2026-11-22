@@ -90,35 +90,71 @@ document.addEventListener('DOMContentLoaded', () => {
   const fmt     = s => fromIso(s).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   const now        = new Date();
-  const todayIso   = toIso(now);
-  const firstMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  let todayIso   = toIso(now);
+  let firstMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  let maxIso = toIso(new Date(now.getFullYear() + 2, now.getMonth(), now.getDate()));
   let view  = firstMonth;
   let start = null;
   let end   = null;
   let availabilityReady = false;
+  let bookingEnabled = false;
+  let bookingInProgress = false;
+  let availabilityRequest = 0;
   let periods = [];
   const bookingSubmit = document.querySelector('#bookingForm button[type="submit"]');
   bookingSubmit.disabled = true;
 
+  function updateBookingSubmit() {
+    bookingSubmit.disabled = !availabilityReady || !bookingEnabled || bookingInProgress;
+  }
+
   async function loadAvailability() {
+    const request = ++availabilityRequest;
+    availabilityReady = false;
+    updateBookingSubmit();
+    calGrid.setAttribute('aria-busy', 'true');
+    setHint('Verfügbarkeit wird geladen …');
+    renderCalendar();
     try {
       const response = await fetch('api/index.php?action=availability', { cache: 'no-store' });
       const data = await response.json();
+      if (request !== availabilityRequest) return false;
       if (!response.ok) throw new Error(data.error || 'Verfügbarkeit konnte nicht geladen werden.');
+      if (!Array.isArray(data.periods)) throw new Error('Ungültige Verfügbarkeitsdaten.');
       periods = data.periods;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(data.today)) {
+        todayIso = data.today;
+        const today = fromIso(todayIso);
+        firstMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        if (view < firstMonth) view = firstMonth;
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(data.max_date)) maxIso = data.max_date;
+      bookingEnabled = data.booking_enabled !== false;
       availabilityReady = true;
-      bookingSubmit.disabled = false;
-      document.querySelector('#bookingForm .form-note').textContent = data.mode === 'automatic'
+      updateBookingSubmit();
+      document.querySelector('#bookingForm .form-note').textContent = !bookingEnabled
+        ? 'Online-Reservierung momentan nicht verfügbar. Bitte telefonisch reservieren: +49 171 2015568.'
+        : data.mode === 'automatic'
         ? 'Nach dem Absenden wird deine Buchung automatisch bestätigt. Du erhältst eine Reservierungs- und eine Buchungsbestätigung per E-Mail.'
         : 'Deine Tage werden sofort reserviert. Du erhältst eine E-Mail zur Reservierung und nach manueller Freigabe eine Buchungsbestätigung.';
+      if (start && (start < todayIso || (end || start) > maxIso || !rangeIsFree(start, end || start, bookedDays()))) {
+        start = end = null;
+        setHint('Der gewählte Zeitraum ist nicht mehr verfügbar. Bitte neu wählen.', true);
+      } else {
+        setHint(start ? 'Zeitraum gewählt. Zum Ändern einen neuen Starttag anklicken.' : 'Ersten Miettag anklicken, dann den letzten.');
+      }
       renderCalendar();
+      updateSummary();
       return true;
     } catch (error) {
+      if (request !== availabilityRequest) return false;
       availabilityReady = false;
-      bookingSubmit.disabled = true;
+      updateBookingSubmit();
       setHint('Online-Reservierung momentan nicht verfügbar. Bitte telefonisch melden: +49 171 2015568.', true);
       renderCalendar();
       return false;
+    } finally {
+      if (request === availabilityRequest) calGrid.setAttribute('aria-busy', 'false');
     }
   }
 
@@ -148,6 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const booked = bookedDays();
     calMonth.textContent = view.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
     document.querySelector('.calendar__nav[data-dir="-1"]').disabled = view <= firstMonth;
+    document.querySelector('.calendar__nav[data-dir="1"]').disabled = toIso(new Date(view.getFullYear(), view.getMonth() + 1, 1)) > maxIso;
 
     calGrid.innerHTML = '';
     const offset = (view.getDay() + 6) % 7;
@@ -164,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.dataset.date = iso;
       btn.setAttribute('aria-label', fmt(iso));
 
-      if (iso < todayIso || !availabilityReady || !trailerSelect.value) btn.disabled = true;
+      if (iso < todayIso || iso > maxIso || !availabilityReady || !trailerSelect.value) btn.disabled = true;
       if (booked.has(iso)) {
         btn.disabled = true;
         btn.classList.add('is-booked');
@@ -332,11 +369,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('bookingForm').addEventListener('submit', async e => {
     e.preventDefault();
+    if (bookingInProgress) return;
     if (!dateFrom.value || !availabilityReady) {
       setHint('Bitte einen verfügbaren Zeitraum auswählen.', true);
       return;
     }
-    bookingSubmit.disabled = true;
+    if (!bookingEnabled) {
+      setHint('Bitte telefonisch reservieren: +49 171 2015568.', true);
+      return;
+    }
+    bookingInProgress = true;
+    updateBookingSubmit();
     try {
       const response = await fetch('api/index.php?action=reserve', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -355,13 +398,17 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `Deine Buchung ist bestätigt. Referenz: ${data.id}. Reservierungs- und Buchungsbestätigung werden per E-Mail verschickt.`
         : `Deine Tage sind reserviert. Referenz: ${data.id}. Du erhältst eine E-Mail zur Reservierung und nach Prüfung eine Buchungsbestätigung.`;
       e.target.parentNode.append(success);
-      e.target.reset(); start = end = null; updateSummary();
+      const selectedTrailer = trailerSelect.value;
+      e.target.reset();
+      trailerSelect.value = selectedTrailer;
+      start = end = null;
+      updateTrailerName();
+      updateSummary();
       await loadAvailability();
-      setHint('Ersten Miettag anklicken, dann den letzten.');
       setTimeout(() => success.remove(), 30000);
     } catch (error) {
       setHint(error.message || 'Reservierung fehlgeschlagen. Bitte telefonisch melden.', true);
-    } finally { bookingSubmit.disabled = !availabilityReady; }
+    } finally { bookingInProgress = false; updateBookingSubmit(); }
   });
   handleForm('woodForm',    'Holzbestellung eingegangen!');
   handleForm('contactForm', 'Nachricht gesendet!');

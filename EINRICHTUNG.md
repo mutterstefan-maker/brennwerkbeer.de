@@ -33,6 +33,8 @@ Die erste Version bietet einen Adminzugang, keine Benutzerverwaltung oder Passwo
 
 ## Lokal prüfen
 
-PHP mit PDO_SQLite installieren, Konfiguration wie oben anlegen und im Projekt `php -S localhost:8080` starten. Der PHP-Entwicklungsserver wertet `.htaccess` nicht aus: nur lokal verwenden, niemals öffentlich betreiben.
+PHP mit PDO_SQLite installieren, Konfiguration wie oben anlegen und im Projekt `npm start` starten. Die Seite läuft dann unter `http://127.0.0.1:8080/`, die Verwaltung unter `/admin.html`. `npm run dev` startet zusätzlich die Vite-Entwicklungsansicht mit angebundener PHP-API. Beide Startbefehle sperren den direkten Zugriff auf private Konfiguration und Datenbank. Nur lokal verwenden, niemals öffentlich betreiben.
+
+Eine leere oder ungültige `mail_from`-Adresse lässt die Belegungsanzeige zu, sperrt aber das Absenden neuer Reservierungen. Nach Einrichtung der Absenderadresse genügt es, das Buchungsfenster erneut zu öffnen. Die Bestätigung bleibt standardmäßig manuell; automatische Buchungsbestätigung kann im Adminbereich eingestellt werden.
 
 Isolierte API-Integrationstests ohne Änderung der Projekt-Datenbank: `python tests/booking_api.py PFAD_ZU_PHP`. Die Tests legen einen temporären Webroot an. JavaScript-Syntax: `node --check js/main.js` und `node --check js/admin.js`.

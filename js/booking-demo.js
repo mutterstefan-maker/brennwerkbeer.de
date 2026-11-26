@@ -21,7 +21,7 @@ export function createBookingDemo({ today = new Date(), storage = globalThis.loc
   const day = offset => iso(new Date(today.getFullYear(), today.getMonth(), today.getDate() + offset));
   function initial() {
     return {
-      version: 1, today: todayIso, mode: 'manual', nextId: 1, generation: `${Date.now()}-${Math.random()}`,
+      version: 1, today: todayIso, mode: 'manual', nextId: 1, generation: `${Date.now()}-${Math.random()}`, cancellations: {},
       bookings: [['1', 3, 5], ['1', 10, 11], ['2', 1, 2], ['2', 8, 9]].map(([trailer, first, last], index) => ({
         id: `DEMO-BLOCK-${index + 1}`, trailer, date_from: day(first), date_to: day(last),
         name: 'Beispielbelegung', email: '', phone: '', note: 'Beispieltermin für die Vorführung',
@@ -80,9 +80,34 @@ export function createBookingDemo({ today = new Date(), storage = globalThis.loc
         status: action === 'block' ? 'blocked' : state.mode === 'automatic' ? 'confirmed' : 'pending',
         created_at: new Date().toISOString(),
       };
+      let cancellationToken;
+      if (action === 'reserve') {
+        cancellationToken = Array.from(globalThis.crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, '0')).join('');
+        (state.cancellations ??= {})[booking.id] = cancellationToken;
+      }
       state.bookings.push(booking);
       write(state);
-      return { id: booking.id, status: booking.status };
+      return { id: booking.id, status: booking.status, ...(cancellationToken ? { cancellation_token: cancellationToken } : {}) };
+    }
+    if (action === 'cancellation-details' || action === 'cancel') {
+      const booking = state.bookings.find(booking => booking.id === data.id);
+      if (!booking || !booking.email || !data.token || state.cancellations?.[booking.id] !== data.token) {
+        fail('Dieser Stornierungslink ist ungültig. In der Demo gilt der Link nur im selben Browser und bis zum nächsten Zurücksetzen.', 404);
+      }
+      if (action === 'cancellation-details') {
+        const { id, trailer, date_from, date_to, status } = booking;
+        return { id, trailer, date_from, date_to, status };
+      }
+      if (!['pending', 'confirmed', 'cancelled'].includes(booking.status)) fail('Diese Reservierung kann nicht zurückgenommen werden.', 409);
+      const alreadyCancelled = booking.status === 'cancelled';
+      booking.status = 'cancelled';
+      write(state);
+      return { id: booking.id, status: booking.status, already_cancelled: alreadyCancelled };
+    }
+    if (action === 'email-document') {
+      const booking = state.bookings.find(booking => booking.id === data.id);
+      if (!booking || !booking.email) fail('Keine Kundenreservierung gefunden.', 404);
+      return { ok: true, sent: false, recipient: booking.email, demo: true };
     }
     if (action === 'settings') {
       if (!['manual', 'automatic'].includes(data.mode)) fail('Ungültiger Modus.');

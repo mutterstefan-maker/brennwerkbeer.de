@@ -14,16 +14,18 @@ Website für Michael Beer, Langenbach (Bayern).
 ## Entwicklung
 Für den funktionsfähigen Buchungskalender `npm start` ausführen und `http://127.0.0.1:8080/` öffnen. Der Startbefehl verwendet installiertes PHP oder die lokale Laufzeit unter `.runtime/php/php.exe` und aktiviert PDO_SQLite. Mit `BRENNWERK_PHP` kann eine andere PHP-Datei gewählt werden; `BRENNWERK_PORT` ändert den Port. Einrichtung und Betrieb: [EINRICHTUNG.md](EINRICHTUNG.md).
 
-Adminbereich: `/admin.html`. Enthält Reservierungsfreigabe, Stornierung, eigene Terminblockierungen und die Umschaltung zwischen manueller und automatischer Bestätigung.
+Adminbereich: `/admin.html`. Enthält Reservierungsfreigabe, Stornierung, eigene Terminblockierungen, Kunden-PDFs zum Herunterladen und Drucken, PDF-Versand an die gespeicherte Kundenadresse und die Umschaltung zwischen manueller und automatischer Bestätigung. Die PDF-Erzeugung nutzt die mitgelieferte PHP-Bibliothek und benötigt mbstring und zlib.
 
 ## Kalender und Verwaltung vorführen
 
 Kundensicht: [Kalender-Demo](https://mutterstefan-maker.github.io/brennwerkbeer.de/index.html?demo=kalender).
 Verwaltung: [Demo-Adminbereich](https://mutterstefan-maker.github.io/brennwerkbeer.de/admin.html?demo=kalender).
 
-Beide Links im selben Browser öffnen. In der Kundensicht sind Testkontaktdaten ausgefüllt und Beispielbelegungen sichtbar. Freie Tage wählen und „Demo-Buchung testen“ anklicken. Die Buchung erscheint sofort als Reservierung in der Demo-Verwaltung. Dort kann sie bestätigt oder storniert werden; Storno gibt die Tage wieder frei. Eigene Blockierungen und automatische Bestätigung können ebenfalls vorgeführt werden.
+Beide Links im selben Browser öffnen. In der Kundensicht sind Testkontaktdaten ausgefüllt und Beispielbelegungen sichtbar. Freie Tage wählen und „Demo-Buchung testen“ anklicken. Die Buchung erscheint sofort als Reservierung in der Demo-Verwaltung. Über „Reservierung zurücknehmen“ kann der Kunde seine Anfrage selbst zurücknehmen; der Link zeigt zuerst eine Rückfrage. In der Verwaltung kann die Reservierung bestätigt oder storniert werden. Storno gibt die Tage wieder frei. Eigene Blockierungen und automatische Bestätigung können ebenfalls vorgeführt werden.
 
 Auf GitHub Pages ist die Demo automatisch aktiv. Auf dem PHP-Webspace wird sie ausschließlich mit `?demo=kalender` eingeschaltet. Sie benötigt kein PHP und keinen Adminzugang, versendet keine E-Mails und verändert die echte Buchungsdatenbank nicht. Demo-Daten werden getrennt im Browser gespeichert; bitte nur Testdaten eingeben. „Demo zurücksetzen“ stellt die Beispielbelegungen wieder her. An einem neuen Tag startet die Demo frisch.
+
+In der Demo lassen sich Kundendokumente drucken und über „Als PDF speichern“ im Druckdialog sichern. Der PDF-Mailversand wird dort ausdrücklich nur vorgeführt. Im Echtbetrieb erzeugt der PHP-Server die PDF zum direkten Download und versendet sie auf Anforderung als Anhang. Fehlgeschlagene Übergaben bleiben einschließlich PDF in der Versandwarteschlange und können erneut versucht werden.
 
 ## Webdesign
 [ChefBlick](https://chefblick.de) – Stefan Mutter

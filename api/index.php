@@ -41,6 +41,8 @@ try {
         INSERT OR IGNORE INTO settings VALUES (1, 'manual');
         CREATE TABLE IF NOT EXISTS bookings (id TEXT PRIMARY KEY, trailer TEXT NOT NULL, date_from TEXT NOT NULL, date_to TEXT NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT NOT NULL, note TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS outbox (id INTEGER PRIMARY KEY, booking_id TEXT NOT NULL, recipient TEXT NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, sent_at TEXT, attempts INTEGER NOT NULL DEFAULT 0, claimed_until INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS outbox_attachments (mail_id INTEGER PRIMARY KEY, filename TEXT NOT NULL, content BLOB NOT NULL);
+        CREATE TABLE IF NOT EXISTS cancellation_key (id INTEGER PRIMARY KEY CHECK(id=1), secret TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires INTEGER NOT NULL);");
     $action = $_GET['action'] ?? '';
     $method = $_SERVER['REQUEST_METHOD'];
@@ -61,14 +63,37 @@ try {
         $q = $db->prepare('SELECT count FROM limits WHERE key=?'); $q->execute([$key]);
         if ((int)$q->fetchColumn() > $maximum) fail('Zu viele Versuche. Bitte später erneut versuchen.', 429);
     }
-    function queueMail(PDO $db, array $b, string $status): void {
+    function cancellationToken(PDO $db, string $id): string {
+        $secret = $db->query('SELECT secret FROM cancellation_key WHERE id=1')->fetchColumn();
+        if ($secret === false) {
+            $q = $db->prepare('INSERT OR IGNORE INTO cancellation_key VALUES (1,?)');
+            $q->execute([bin2hex(random_bytes(32))]);
+            $secret = $db->query('SELECT secret FROM cancellation_key WHERE id=1')->fetchColumn();
+        }
+        return hash_hmac('sha256', 'cancel:' . $id, $secret);
+    }
+    function queueMail(PDO $db, array $b, string $status, array $config, ?string $attachment = null): int {
         $labels = ['pending' => 'Reservierung eingegangen', 'confirmed' => 'Buchung bestätigt', 'cancelled' => 'Reservierung / Buchung storniert'];
         $trailer = $b['trailer'] === '1' ? '3-Seitenkipper 3,5 t' : 'Planenanhänger 2,7 t';
         $text = "Hallo {$b['name']},\n\n{$labels[$status]}.\nAnhänger: $trailer\nZeitraum: {$b['date_from']} bis {$b['date_to']} (beide Tage einschließlich)\nReferenz: {$b['id']}\n\n";
+        if ($attachment !== null) $text = "Hallo {$b['name']},\n\nanbei deine Buchungsübersicht als PDF.\nAktueller Status: {$labels[$status]}\nAnhänger: $trailer\nZeitraum: {$b['date_from']} bis {$b['date_to']}\nReferenz: {$b['id']}\n\n";
         $text .= $status === 'pending' ? "Die Tage sind für dich reserviert. Deine Buchung wird nach manueller Prüfung separat bestätigt.\n" : '';
+        if ($status !== 'cancelled') {
+            $url = rtrim($config['site_url'] ?? 'https://brennwerkbeer.de', '/') . '/#stornierung=' . $b['id'] . '.' . cancellationToken($db, $b['id']);
+            $text .= "\nDu kannst deine Reservierung oder Buchung selbst zurücknehmen:\n$url\nErst nach deiner Bestätigung auf der Website werden die Tage wieder freigegeben. Bitte diesen persönlichen Link nicht weitergeben.\n";
+        }
         $text .= "\nBei Fragen: +49 171 2015568\nMichael Beer";
         $q = $db->prepare('INSERT INTO outbox (booking_id,recipient,subject,body) VALUES (?,?,?,?)');
-        $q->execute([$b['id'], $b['email'], $labels[$status] . ' – Michael Beer', $text]);
+        $q->execute([$b['id'], $b['email'], ($attachment !== null ? 'Deine Buchungsübersicht' : $labels[$status]) . ' – Michael Beer', $text]);
+        $mailId = (int)$db->lastInsertId();
+        if ($attachment !== null) {
+            $q = $db->prepare('INSERT INTO outbox_attachments VALUES (?,?,?)');
+            $q->bindValue(1, $mailId, PDO::PARAM_INT);
+            $q->bindValue(2, bookingDocumentFilename($b));
+            $q->bindValue(3, $attachment, PDO::PARAM_LOB);
+            $q->execute();
+        }
+        return $mailId;
     }
     function deliver(PDO $db, array $config): void {
         foreach ($db->query('SELECT * FROM outbox WHERE sent_at IS NULL ORDER BY id LIMIT 20')->fetchAll(PDO::FETCH_ASSOC) as $mail) {
@@ -76,7 +101,17 @@ try {
             $claim->execute([time() + 600, $mail['id'], time()]);
             if (!$claim->rowCount()) continue;
             try {
-                $ok = function_exists('mail') && @mail($mail['recipient'], '=?UTF-8?B?' . base64_encode($mail['subject']) . '?=', $mail['body'], ['From' => $config['mail_from'], 'Content-Type' => 'text/plain; charset=UTF-8']);
+                $headers = ['From' => $config['mail_from'], 'MIME-Version' => '1.0', 'Content-Type' => 'text/plain; charset=UTF-8'];
+                $body = $mail['body'];
+                $q = $db->prepare('SELECT filename,content FROM outbox_attachments WHERE mail_id=?');
+                $q->execute([$mail['id']]); $attachment = $q->fetch(PDO::FETCH_ASSOC);
+                if ($attachment) {
+                    $boundary = '=_Brennwerk_' . bin2hex(random_bytes(18));
+                    $headers['Content-Type'] = 'multipart/mixed; boundary="' . $boundary . '"';
+                    $body = '--' . $boundary . "\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($mail['body']), 76, "\r\n");
+                    $body .= '--' . $boundary . "\r\nContent-Type: application/pdf\r\nContent-Disposition: attachment; filename=\"" . $attachment['filename'] . "\"\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($attachment['content']), 76, "\r\n") . '--' . $boundary . "--\r\n";
+                }
+                $ok = function_exists('mail') && @mail($mail['recipient'], '=?UTF-8?B?' . base64_encode($mail['subject']) . '?=', $body, $headers);
             } catch (Throwable $error) {
                 error_log('Booking mail transport failed.');
                 $ok = false;
@@ -116,14 +151,59 @@ try {
         $mode = $db->query('SELECT mode FROM settings WHERE id=1')->fetchColumn();
         $b = ['id' => bin2hex(random_bytes(8)), 'trailer' => $trailer, 'date_from' => $from, 'date_to' => $to, 'name' => $name, 'email' => $email, 'phone' => $phone, 'note' => $note, 'status' => $mode === 'automatic' ? 'confirmed' : 'pending', 'created_at' => date(DATE_ATOM)];
         $q = $db->prepare('INSERT INTO bookings VALUES (?,?,?,?,?,?,?,?,?,?)'); $q->execute(array_values($b));
-        queueMail($db, $b, 'pending');
-        if ($b['status'] === 'confirmed') queueMail($db, $b, 'confirmed');
+        queueMail($db, $b, 'pending', $config);
+        if ($b['status'] === 'confirmed') queueMail($db, $b, 'confirmed', $config);
         $db->exec('COMMIT'); deliver($db, $config);
-        reply(['id' => $b['id'], 'status' => $b['status']], 201);
+        reply(['id' => $b['id'], 'status' => $b['status'], 'cancellation_token' => cancellationToken($db, $b['id'])], 201);
+    }
+    if (in_array($action, ['cancellation-details', 'cancel'], true)) {
+        if ($method !== 'POST') fail('Methode nicht erlaubt.', 405);
+        throttle($db, 'cancellation', 60);
+        $id = field($input, 'id', 32); $token = field($input, 'token', 64);
+        $q = $db->prepare('SELECT * FROM bookings WHERE id=?'); $q->execute([$id]); $b = $q->fetch(PDO::FETCH_ASSOC);
+        if (!$b || !$b['email'] || !in_array($b['status'], ['pending', 'confirmed', 'cancelled'], true)
+            || !hash_equals(cancellationToken($db, $id), $token)) fail('Dieser Stornierungslink ist ungültig. Bitte den vollständigen Link aus deiner E-Mail öffnen.', 404);
+        if ($action === 'cancellation-details') reply(array_intersect_key($b, array_flip(['id', 'trailer', 'date_from', 'date_to', 'status'])));
+        $db->exec('BEGIN IMMEDIATE');
+        $q = $db->prepare("UPDATE bookings SET status='cancelled' WHERE id=? AND status IN ('pending','confirmed')");
+        $q->execute([$id]);
+        $alreadyCancelled = $q->rowCount() === 0;
+        if ($alreadyCancelled) {
+            $q = $db->prepare('SELECT status FROM bookings WHERE id=?'); $q->execute([$id]);
+            if ($q->fetchColumn() !== 'cancelled') { $db->exec('ROLLBACK'); fail('Diese Reservierung kann nicht zurückgenommen werden.', 409); }
+        } else {
+            queueMail($db, $b, 'cancelled', $config);
+        }
+        $db->exec('COMMIT');
+        if (!$alreadyCancelled) deliver($db, $config);
+        reply(['id' => $id, 'status' => 'cancelled', 'already_cancelled' => $alreadyCancelled]);
     }
     if (!$admin) fail('Bitte anmelden.', 401);
     if ($method === 'POST' && !hash_equals($_SESSION['csrf'], $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) fail('Sitzung ungültig. Bitte neu anmelden.', 403);
     if ($action === 'admin' && $method === 'GET') reply(['csrf' => $_SESSION['csrf'], 'mode' => $db->query('SELECT mode FROM settings WHERE id=1')->fetchColumn(), 'bookings' => $db->query('SELECT * FROM bookings ORDER BY date_from, created_at')->fetchAll(PDO::FETCH_ASSOC), 'unsent' => (int)$db->query('SELECT COUNT(*) FROM outbox WHERE sent_at IS NULL')->fetchColumn()]);
+    if (($action === 'document' && $method === 'GET') || ($action === 'email-document' && $method === 'POST')) {
+        $id = field($method === 'GET' ? $_GET : $input, 'id', 32);
+        $q = $db->prepare('SELECT * FROM bookings WHERE id=?'); $q->execute([$id]); $b = $q->fetch(PDO::FETCH_ASSOC);
+        if (!$b || !$b['email']) fail('Keine Kundenreservierung gefunden.', 404);
+        if (!extension_loaded('mbstring')) fail('Für PDF-Dateien bitte die PHP-Erweiterung mbstring auf dem Server aktivieren.', 503);
+        if ($action === 'email-document') {
+            if (!filter_var($config['mail_from'] ?? '', FILTER_VALIDATE_EMAIL)) fail('Der E-Mail-Versand ist noch nicht eingerichtet.', 503);
+            throttle($db, 'document-mail', 20);
+        }
+        require_once __DIR__ . '/booking-pdf.php';
+        $pdf = bookingPdf($b);
+        if ($action === 'document') {
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: ' . (($_GET['inline'] ?? '') === '1' ? 'inline' : 'attachment') . '; filename="' . bookingDocumentFilename($b) . '"');
+            header('Content-Length: ' . strlen($pdf));
+            echo $pdf; exit;
+        }
+        $db->exec('BEGIN IMMEDIATE');
+        $mailId = queueMail($db, $b, $b['status'], $config, $pdf);
+        $db->exec('COMMIT'); deliver($db, $config);
+        $q = $db->prepare('SELECT sent_at FROM outbox WHERE id=?'); $q->execute([$mailId]);
+        reply(['ok' => true, 'sent' => (bool)$q->fetchColumn(), 'recipient' => $b['email']]);
+    }
     if ($action === 'logout' && $method === 'POST') { $_SESSION = []; session_destroy(); reply(['ok' => true]); }
     if ($action === 'settings' && $method === 'POST') {
         $mode = field($input, 'mode'); if (!in_array($mode, ['manual', 'automatic'], true)) fail('Ungültiger Modus.');
@@ -146,7 +226,7 @@ try {
         if (!$b) { $db->exec('ROLLBACK'); fail('Eintrag nicht gefunden.', 404); }
         if (!($status === 'confirmed' && $b['status'] === 'pending') && !($status === 'cancelled' && in_array($b['status'], ['pending','confirmed','blocked'], true))) { $db->exec('ROLLBACK'); fail('Dieser Statuswechsel ist nicht mehr möglich.', 409); }
         $q = $db->prepare('UPDATE bookings SET status=? WHERE id=?'); $q->execute([$status, $id]);
-        if ($b['email']) queueMail($db, $b, $status);
+        if ($b['email']) queueMail($db, $b, $status, $config);
         $db->exec('COMMIT'); deliver($db, $config); reply(['ok' => true]);
     }
     if ($action === 'retry-mail' && $method === 'POST') { deliver($db, $config); reply(['ok' => true]); }

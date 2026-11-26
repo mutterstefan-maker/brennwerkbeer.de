@@ -12,19 +12,21 @@ function findPhp() {
   const candidates = [process.env.BRENNWERK_PHP, join(root, '.runtime', 'php', 'php.exe'), 'php'].filter(Boolean)
   for (const binary of candidates) {
     try {
-      const inspect = 'echo json_encode([PHP_VERSION_ID, extension_loaded("pdo_sqlite"), ini_get("extension_dir")]);'
-      const [version, sqlite, extensionDir] = JSON.parse(execFileSync(binary, ['-r', inspect], { encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000 }))
+      const inspect = 'echo json_encode([PHP_VERSION_ID, extension_loaded("pdo_sqlite"), extension_loaded("mbstring"), ini_get("extension_dir")]);'
+      const [version, sqlite, mbstring, extensionDir] = JSON.parse(execFileSync(binary, ['-r', inspect], { encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000 }))
       if (version < 80100) continue
       const flags = []
-      if (!sqlite) {
+      if (!sqlite || !mbstring) {
         const extensions = existsSync(join(dirname(binary), 'ext')) ? join(dirname(binary), 'ext') : extensionDir
-        flags.push('-d', `extension_dir=${extensions}`, '-d', 'extension=pdo_sqlite')
-        execFileSync(binary, [...flags, '-r', 'exit(extension_loaded("pdo_sqlite") ? 0 : 1);'], { windowsHide: true, stdio: 'pipe', timeout: 10000 })
+        flags.push('-d', `extension_dir=${extensions}`)
+        if (!sqlite) flags.push('-d', 'extension=pdo_sqlite')
+        if (!mbstring) flags.push('-d', 'extension=mbstring')
+        execFileSync(binary, [...flags, '-r', 'exit(extension_loaded("pdo_sqlite") && extension_loaded("mbstring") ? 0 : 1);'], { windowsHide: true, stdio: 'pipe', timeout: 10000 })
       }
       return { binary, flags }
     } catch { /* Try the next installed PHP runtime. */ }
   }
-  throw new Error('PHP 8.1+ mit PDO_SQLite fehlt. PHP installieren oder BRENNWERK_PHP auf die php.exe setzen.')
+  throw new Error('PHP 8.1+ mit PDO_SQLite und mbstring fehlt. PHP installieren oder BRENNWERK_PHP auf die php.exe setzen.')
 }
 
 async function unusedPort(requested = 0) {

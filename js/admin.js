@@ -1,5 +1,6 @@
 'use strict';
-import { createBookingDemo, DEMO_STORAGE_KEY, isBookingDemoLocation, mountDemoBanner } from './booking-demo.js?v=20261122-admin-demo';
+import { createBookingDemo, DEMO_STORAGE_KEY, isBookingDemoLocation, mountDemoBanner } from './booking-demo.js?v=20261126-admin-documents';
+import { printBookingDocument } from './booking-document.js?v=20261126-admin-documents';
 
 (() => {
   const bookingDemo = isBookingDemoLocation() ? createBookingDemo() : null;
@@ -49,7 +50,40 @@ import { createBookingDemo, DEMO_STORAGE_KEY, isBookingDemoLocation, mountDemoBa
       const addAction = (text,status) => { const button = element('button',text,'btn'); button.type='button'; button.onclick=async()=>{ if(status==='cancelled' && !confirm('Diesen Eintrag aufheben und die Tage wieder freigeben?')) return; button.disabled=true; try{await api('status',{id:b.id,status});await refresh();message('Änderung gespeichert.');}catch(e){message(e.message);}finally{button.disabled=false;} }; actions.append(button); };
       if(b.status==='pending') addAction('Buchung bestätigen','confirmed');
       if(b.status!=='cancelled') addAction(b.status==='blocked'?'Blockierung aufheben':b.status==='pending'?'Reservierung ablehnen':'Buchung stornieren','cancelled');
-      card.append(actions);$('bookings').append(card);
+      card.append(actions);
+      if (b.email) {
+        const documents = element('div', '', 'actions admin-booking__documents');
+        if (bookingDemo) {
+          const pdf = element('button', 'PDF speichern (Druckdialog)', 'btn');
+          pdf.type = 'button';
+          pdf.onclick = () => { message('Demo: Im Druckdialog „Als PDF speichern“ wählen.'); printBookingDocument(b); };
+          documents.append(pdf);
+        } else {
+          const pdf = element('a', 'PDF herunterladen', 'btn');
+          pdf.href = `api/index.php?action=document&id=${encodeURIComponent(b.id)}`;
+          documents.append(pdf);
+        }
+        const print = element('button', 'Drucken', 'btn');
+        print.type = 'button'; print.onclick = () => printBookingDocument(b);
+        const email = element('button', 'PDF per E-Mail senden', 'btn');
+        email.type = 'button';
+        email.onclick = async () => {
+          if (!confirm(`${bookingDemo ? 'Demo: Versand vorführen' : 'Buchungsübersicht als PDF senden'} an ${b.email}?`)) return;
+          email.disabled = true;
+          try {
+            const data = await api('email-document', { id: b.id });
+            await refresh();
+            message(bookingDemo
+              ? `Demo: PDF-Versand an ${data.recipient} vorgeführt. Es wurde keine E-Mail versendet.`
+              : data.sent ? `PDF an ${data.recipient} zum Versand übergeben.`
+              : `PDF für ${data.recipient} vorgemerkt. Der Mailserver hat den Versand noch nicht angenommen. Über „E-Mail-Versand erneut versuchen“ kannst du es erneut anstoßen.`);
+          } catch (error) { message(error.message); }
+          finally { email.disabled = false; }
+        };
+        documents.append(print, email);
+        card.append(documents);
+      }
+      $('bookings').append(card);
     }
     $('month').textContent=month.toLocaleDateString('de-DE',{month:'long',year:'numeric'});
     $('calendar').replaceChildren();

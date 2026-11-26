@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=20261122-calendar-demo" />
+  <link rel="stylesheet" href="css/style.css?v=20261126-customer-cancellation" />
   <link rel="stylesheet" href="css/workshop.css?v=20261122-contact-layout" />
   <link rel="stylesheet" href="carousel-assets/carousel.css?v=20261122-no-preview-strip" />
 </head>
@@ -303,15 +303,15 @@
 
         <div class="booking-layout__col">
           <div class="form-group">
-            <label for="book-name">Vor- und Nachname</label>
+            <label for="book-name">Vor- und Nachname <span aria-hidden="true">*</span></label>
             <input type="text" id="book-name" name="name" autocomplete="name" required />
           </div>
           <div class="form-group">
-            <label for="book-phone">Telefon</label>
+            <label for="book-phone">Telefon <span aria-hidden="true">*</span></label>
             <input type="tel" id="book-phone" name="phone" autocomplete="tel" required />
           </div>
           <div class="form-group">
-            <label for="book-email">E-Mail</label>
+            <label for="book-email">E-Mail <span aria-hidden="true">*</span></label>
             <input type="email" id="book-email" name="email" autocomplete="email" required />
           </div>
           <div class="form-group">
@@ -324,7 +324,27 @@
           </div>
           <button type="submit" class="btn btn--primary btn--lg btn--full" disabled>Buchungsanfrage senden</button>
           <p class="form-note">Die Buchung wird von Michael Beer persönlich bestätigt – per Telefon oder E-Mail.</p>
+          <p class="form-note">* Pflichtfelder</p>
         </div>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog class="modal modal--narrow cancellation-dialog" id="cancellationDialog" aria-labelledby="cancellationTitle">
+    <div class="modal__head">
+      <div>
+        <p class="modal__eyebrow">Deine Reservierung</p>
+        <h2 class="modal__title" id="cancellationTitle">Reservierung zurücknehmen</h2>
+      </div>
+      <button type="button" class="modal__close" data-close aria-label="Schließen"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal__body">
+      <form class="booking-form" id="cancellationForm">
+        <p id="cancellationMessage" role="status" aria-live="polite"></p>
+        <div class="booking-summary" id="cancellationSummary" hidden></div>
+        <p id="cancellationPrompt" hidden>Wenn du die Reservierung zurücknimmst, werden die Tage wieder zur Buchung freigegeben.</p>
+        <button type="submit" class="btn btn--primary btn--full" id="cancellationSubmit" hidden>Reservierung jetzt zurücknehmen</button>
+        <button type="button" class="btn btn--outline btn--full" id="cancellationKeep" data-close>Schließen</button>
       </form>
     </div>
   </dialog>
@@ -399,7 +419,7 @@
     <a href="https://wa.me/491712015568?text=Hallo%20Michael%2C%20ich%20habe%20eine%20Frage%3A%20" class="quick-contact__wa" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><span>WhatsApp</span></a>
   </div>
 
-  <script type="module" src="js/main.js?v=20261122-admin-demo"></script>
+  <script type="module" src="js/main.js?v=20261126-admin-documents"></script>
 
   <script type="module" src="carousel-assets/carousel.js?v=20261122-no-preview-strip"></script>
 </body>

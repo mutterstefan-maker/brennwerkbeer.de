@@ -5,3 +5,6 @@ node_modules/
 private/config.php
 private/*.sqlite*
 .runtime/
+private/vendor/tfpdf/font/unifont/*.mtx.php
+private/vendor/tfpdf/font/unifont/*.cw.dat
+private/vendor/tfpdf/font/unifont/*.cw127.php

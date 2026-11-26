@@ -2,7 +2,7 @@
 // Michael Beer – main.js
 // =============================================
 
-import { createBookingDemo, DEMO_STORAGE_KEY, isBookingDemoLocation, mountDemoBanner } from './booking-demo.js?v=20261122-admin-demo';
+import { createBookingDemo, DEMO_STORAGE_KEY, isBookingDemoLocation, mountDemoBanner } from './booking-demo.js?v=20261126-admin-documents';
 
 document.addEventListener('DOMContentLoaded', () => {
   const bookingDemo = isBookingDemoLocation() ? createBookingDemo() : null;
@@ -156,8 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
         : !bookingEnabled
         ? 'Online-Reservierung momentan nicht verfügbar. Bitte telefonisch reservieren: +49 171 2015568.'
         : data.mode === 'automatic'
-        ? 'Nach dem Absenden wird deine Buchung automatisch bestätigt. Du erhältst eine Reservierungs- und eine Buchungsbestätigung per E-Mail.'
-        : 'Deine Tage werden sofort reserviert. Du erhältst eine E-Mail zur Reservierung und nach manueller Freigabe eine Buchungsbestätigung.';
+        ? 'Nach dem Absenden wird deine Buchung automatisch bestätigt. Du erhältst eine Reservierungs- und eine Buchungsbestätigung per E-Mail. Über den persönlichen Link darin kannst du deine Buchung zurücknehmen.'
+        : 'Deine Tage werden sofort reserviert. Du erhältst eine E-Mail zur Reservierung und nach manueller Freigabe eine Buchungsbestätigung. Über den persönlichen Link darin kannst du deine Reservierung zurücknehmen.';
       if (start && (start < todayIso || (end || start) > maxIso || !rangeIsFree(start, end || start, bookedDays()))) {
         start = end = null;
         setHint('Der gewählte Zeitraum ist nicht mehr verfügbar. Bitte neu wählen.', true);
@@ -300,9 +300,93 @@ document.addEventListener('DOMContentLoaded', () => {
   const calTrailer    = document.getElementById('calTrailer');
 
   document.querySelectorAll('dialog.modal').forEach(dialog => {
-    dialog.querySelector('[data-close]').addEventListener('click', () => dialog.close());
+    dialog.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => dialog.close()));
     // Klick auf den abgedunkelten Hintergrund schließt das Fenster
     dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+  });
+
+  // ---- Persönlicher Stornierungslink: Öffnen zeigt nur die Rückfrage. ----
+  const cancellationDialog = document.getElementById('cancellationDialog');
+  const cancellationMessage = document.getElementById('cancellationMessage');
+  const cancellationSummary = document.getElementById('cancellationSummary');
+  const cancellationPrompt = document.getElementById('cancellationPrompt');
+  const cancellationSubmit = document.getElementById('cancellationSubmit');
+  const cancellationKeep = document.getElementById('cancellationKeep');
+  let cancellationCredentials = null;
+  let cancellationRequest = 0;
+  let cancellationInProgress = false;
+
+  async function openCancellationFromHash() {
+    const value = new URLSearchParams(location.hash.slice(1)).get('stornierung');
+    if (value === null) return;
+    const request = ++cancellationRequest;
+    cancellationCredentials = null;
+    cancellationSummary.hidden = cancellationPrompt.hidden = cancellationSubmit.hidden = true;
+    cancellationSubmit.disabled = true;
+    cancellationKeep.textContent = 'Schließen';
+    cancellationMessage.textContent = 'Deine Reservierung wird geladen …';
+    document.querySelectorAll('dialog.modal[open]').forEach(dialog => { if (dialog !== cancellationDialog) dialog.close(); });
+    if (!cancellationDialog.open) cancellationDialog.showModal();
+    const match = /^([a-zA-Z0-9-]+)\.([a-f0-9]{64})$/.exec(value);
+    if (!match) {
+      cancellationMessage.textContent = 'Dieser Stornierungslink ist unvollständig. Bitte den vollständigen Link aus deiner E-Mail öffnen.';
+      return;
+    }
+    const credentials = { id: match[1], token: match[2] };
+    try {
+      const data = await bookingRequest('cancellation-details', credentials);
+      if (request !== cancellationRequest) return;
+      const name = data.trailer === '1' ? '3-Seitenkipper 3,5 t' : 'Planenanhänger 2,7 t';
+      cancellationSummary.textContent = `${name}\n${fmt(data.date_from)} – ${fmt(data.date_to)}\nReferenz: ${data.id}\nStatus: ${data.status === 'cancelled' ? 'Zurückgenommen' : data.status === 'confirmed' ? 'Bestätigt' : 'Reserviert'}`;
+      cancellationSummary.hidden = false;
+      if (data.status === 'cancelled') {
+        cancellationMessage.textContent = 'Diese Reservierung wurde bereits zurückgenommen. Du musst nichts weiter tun.';
+        return;
+      }
+      cancellationCredentials = credentials;
+      cancellationMessage.textContent = `${bookingDemo ? 'Demo: ' : ''}Möchtest du diese ${data.status === 'confirmed' ? 'bestätigte Buchung' : 'Reservierung'} zurücknehmen?`;
+      cancellationPrompt.hidden = cancellationSubmit.hidden = false;
+      cancellationSubmit.disabled = false;
+      cancellationKeep.textContent = 'Reservierung behalten';
+    } catch (error) {
+      if (request !== cancellationRequest) return;
+      cancellationMessage.textContent = error.message || 'Die Reservierung konnte nicht geladen werden. Bitte versuche es erneut oder melde dich telefonisch.';
+    }
+  }
+
+  document.getElementById('cancellationForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!cancellationCredentials || cancellationInProgress) return;
+    const request = cancellationRequest;
+    cancellationInProgress = true;
+    cancellationSubmit.disabled = true;
+    cancellationMessage.textContent = 'Deine Reservierung wird zurückgenommen …';
+    try {
+      const data = await bookingRequest('cancel', cancellationCredentials);
+      document.querySelectorAll('[data-booking-success]').forEach(success => {
+        if (success.dataset.bookingSuccess === data.id) success.remove();
+      });
+      if (request === cancellationRequest) {
+        cancellationCredentials = null;
+        cancellationSummary.hidden = cancellationPrompt.hidden = cancellationSubmit.hidden = true;
+        cancellationKeep.textContent = 'Schließen';
+        cancellationMessage.textContent = data.already_cancelled
+          ? 'Diese Reservierung wurde bereits zurückgenommen. Du musst nichts weiter tun.'
+          : bookingDemo
+          ? 'Demo: Deine Reservierung wurde zurückgenommen. Die Tage sind wieder frei und die Demo-Verwaltung ist aktualisiert.'
+          : 'Deine Reservierung wurde zurückgenommen. Die Tage sind wieder frei. Du erhältst eine Bestätigung per E-Mail.';
+      }
+      await loadAvailability();
+    } catch (error) {
+      if (request === cancellationRequest) cancellationMessage.textContent = error.message || 'Die Rücknahme ist fehlgeschlagen. Bitte versuche es erneut.';
+    } finally {
+      cancellationInProgress = false;
+      cancellationSubmit.disabled = !cancellationCredentials;
+    }
+  });
+  window.addEventListener('hashchange', openCancellationFromHash);
+  cancellationDialog.addEventListener('close', () => {
+    if (new URLSearchParams(location.hash.slice(1)).has('stornierung')) history.replaceState(null, '', location.pathname + location.search);
   });
 
   function updateTrailerName() {
@@ -405,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await bookingRequest('reserve', Object.fromEntries(new FormData(e.target)));
       const success = document.createElement('div');
       success.className = 'form-success';
-      success.dataset.bookingSuccess = 'true';
+      success.dataset.bookingSuccess = data.id;
       success.style.display = 'block';
       success.setAttribute('role', 'status');
       success.textContent = bookingDemo
@@ -414,6 +498,15 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `Deine Buchung ist bestätigt. Referenz: ${data.id}. Reservierungs- und Buchungsbestätigung werden per E-Mail verschickt.`
         : `Deine Tage sind reserviert. Referenz: ${data.id}. Du erhältst eine E-Mail zur Reservierung und nach Prüfung eine Buchungsbestätigung.`;
       e.target.parentNode.append(success);
+      if (data.cancellation_token) {
+        const cancellationLink = document.createElement('a');
+        const url = new URL(location.href);
+        url.hash = new URLSearchParams({ stornierung: `${data.id}.${data.cancellation_token}` }).toString();
+        cancellationLink.className = 'btn btn--outline';
+        cancellationLink.href = url.href;
+        cancellationLink.textContent = 'Reservierung zurücknehmen';
+        success.append(document.createElement('br'), cancellationLink);
+      }
       if (bookingDemo) {
         const adminLink = document.createElement('a');
         adminLink.className = 'btn btn--primary';
@@ -431,7 +524,6 @@ document.addEventListener('DOMContentLoaded', () => {
       updateSummary();
       if (bookingDemo) fillDemoCustomer();
       await loadAvailability();
-      setTimeout(() => success.remove(), 30000);
     } catch (error) {
       if (error.status === 409) { start = end = null; updateSummary(); await loadAvailability(); }
       setHint(error.message || 'Reservierung fehlgeschlagen. Bitte telefonisch melden.', true);
@@ -454,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.footer__links a[href="admin.html"]').href = 'admin.html?demo=kalender';
     const note = document.createElement('p');
     note.className = 'booking-demo-note';
-    note.textContent = 'Vorführung: Bitte nur Testdaten verwenden. Die Testbuchung kannst du anschließend im Demo-Adminbereich bestätigen oder stornieren.';
+    note.textContent = 'Vorführung: Bitte nur Testdaten verwenden. Nach der Testbuchung kannst du deine Reservierung selbst zurücknehmen oder sie im Demo-Adminbereich bestätigen und stornieren.';
     bookingDialog.querySelector('.modal__body').prepend(note);
     fillDemoCustomer();
     mountDemoBanner({
@@ -471,8 +563,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('storage', event => { if (event.key === DEMO_STORAGE_KEY) refreshDemo(); });
     window.addEventListener('focus', refreshDemo);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshDemo(); });
-    if (new URLSearchParams(location.search).get('demo') === 'kalender') document.querySelector('[data-book="1"]').click();
+    if (new URLSearchParams(location.search).get('demo') === 'kalender' && !new URLSearchParams(location.hash.slice(1)).has('stornierung')) document.querySelector('[data-book="1"]').click();
   }
+  openCancellationFromHash();
 
   // ---- Smooth anchor scrolling with nav offset ----
   document.querySelectorAll('a[href^="#"]').forEach(a => {

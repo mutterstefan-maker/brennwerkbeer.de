@@ -4,7 +4,7 @@
 
 Das `Dockerfile` erzeugt ein eigenständiges PHP-8.4-/Apache-Image mit SQLite, PDF-Unterstützung und IONOS-SMTP. Es kopiert ausschließlich Website-Dateien und Bibliotheken. Git-Verzeichnis, Testdaten, Archive und lokale Zugangsdaten gelangen nicht in das Image.
 
-1. Ausschließlich die vorhandene Brennwerk-Anwendung in Coolify konfigurieren: Build Pack `Dockerfile`, Repository `https://github.com/mutterstefan-maker/brennwerkbeer.de.git`, Branch `main`, Basisverzeichnis `/` und Dockerfile `/Dockerfile`. Den gewünschten Commit bereitstellen. Der interne HTTP-Port ist `80`; keine öffentlichen Host-Ports neben dem vorhandenen Coolify-Proxy anlegen. Der Build Pack `Docker Image` verlangt in dieser Coolify-Version eine erreichbare Registry und lädt ein nur lokal gebautes Image nicht direkt.
+1. Ausschließlich die vorhandene Brennwerk-Anwendung in Coolify konfigurieren: Build Pack `Dockerfile`, Repository `https://github.com/mutterstefan-maker/brennwerkbeer.de.git`, Branch `main`, Commit-Auswahl `HEAD`, Basisverzeichnis `/` und Dockerfile `/Dockerfile`. Den aktuellen Stand von `main` bereitstellen. Der interne HTTP-Port ist `80`; keine öffentlichen Host-Ports neben dem vorhandenen Coolify-Proxy anlegen. Der Build Pack `Docker Image` verlangt in dieser Coolify-Version eine erreichbare Registry und lädt ein nur lokal gebautes Image nicht direkt.
 2. Einen ausschließlich für Brennwerk verwendeten persistenten Ordner nach `/var/lib/brennwerk` einbinden. Dort liegen `config.php`, die SQLite-Datenbank, die Versandwarteschlange und der Schlüssel für Stornierungslinks. Das Verzeichnis muss für `www-data` beschreibbar sein und darf nicht mit anderen Websites geteilt werden.
 3. Die interaktive Einrichtung aus dem Image ausführen: `docker run --rm -it --network none -v DEIN_BRENNWERK_DATENORDNER:/var/lib/brennwerk --entrypoint php DEIN_IMAGE /usr/local/bin/brennwerk-configure.php`. Passwörter werden verdeckt eingegeben. Die Einrichtung schreibt ausschließlich in diesen Datenordner. Der Administrator heißt `Admin`.
 4. Absender und Empfänger für Website-Anfragen sind `info@brennwerkbeer.de`. Der Container übergibt E-Mails mit TLS an `smtp.ionos.de:465`; Zugangsdaten werden nicht in Kommandozeilen oder öffentliche Dateien geschrieben. Die sichere Passwortübergabe an msmtp erhält auch Sonderzeichen unverändert.
@@ -14,7 +14,7 @@ Die Umgebungsvariablen `BRENNWERK_CONFIG_FILE` und `BRENNWERK_DATA_DIR` erlauben
 
 Beim Umstellen der Website-DNS-Einträge bestehende MX- und SPF-Einträge für IONOS-Mail erhalten. Andere Anwendungen, Proxy-Grundeinstellungen und deren Datenträger gehören nicht zum Brennwerk-Deployment. Datenordner und Schlüssel bei Updates und Backups erhalten.
 
-Für spätere Updates zuerst den Quellstand pushen, dann in derselben Coolify-Anwendung den gewünschten Commit auswählen und bereitstellen. Ein fest eingetragener Commit bleibt auch dann aktiv, wenn auf `main` bereits neuere Änderungen liegen. Die gespeicherten Passwörter und Buchungen bleiben im eingebundenen Datenordner erhalten; die Passworteinrichtung ist bei einem Update nicht erneut nötig.
+Für spätere Updates zuerst den Quellstand nach `main` pushen und dann dieselbe Coolify-Anwendung bereitstellen. Im Bereitstellungsprotokoll den tatsächlich verwendeten Commit kontrollieren. Die gespeicherten Passwörter und Buchungen bleiben im eingebundenen Datenordner erhalten; die Passworteinrichtung ist bei einem Update nicht erneut nötig.
 
 ## Voraussetzungen
 

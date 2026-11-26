@@ -4,15 +4,17 @@
 
 Das `Dockerfile` erzeugt ein eigenständiges PHP-8.4-/Apache-Image mit SQLite, PDF-Unterstützung und IONOS-SMTP. Es kopiert ausschließlich Website-Dateien und Bibliotheken. Git-Verzeichnis, Testdaten, Archive und lokale Zugangsdaten gelangen nicht in das Image.
 
-1. Image aus dem aktuellen Quellstand bauen und ausschließlich der Brennwerk-Anwendung zuordnen. Der interne HTTP-Port ist `80`; keine öffentlichen Host-Ports neben dem vorhandenen Coolify-Proxy anlegen.
+1. Ausschließlich die vorhandene Brennwerk-Anwendung in Coolify konfigurieren: Build Pack `Dockerfile`, Repository `https://github.com/mutterstefan-maker/brennwerkbeer.de.git`, Branch `main`, Basisverzeichnis `/` und Dockerfile `/Dockerfile`. Den gewünschten Commit bereitstellen. Der interne HTTP-Port ist `80`; keine öffentlichen Host-Ports neben dem vorhandenen Coolify-Proxy anlegen. Der Build Pack `Docker Image` verlangt in dieser Coolify-Version eine erreichbare Registry und lädt ein nur lokal gebautes Image nicht direkt.
 2. Einen ausschließlich für Brennwerk verwendeten persistenten Ordner nach `/var/lib/brennwerk` einbinden. Dort liegen `config.php`, die SQLite-Datenbank, die Versandwarteschlange und der Schlüssel für Stornierungslinks. Das Verzeichnis muss für `www-data` beschreibbar sein und darf nicht mit anderen Websites geteilt werden.
 3. Die interaktive Einrichtung aus dem Image ausführen: `docker run --rm -it --network none -v DEIN_BRENNWERK_DATENORDNER:/var/lib/brennwerk --entrypoint php DEIN_IMAGE /usr/local/bin/brennwerk-configure.php`. Passwörter werden verdeckt eingegeben. Die Einrichtung schreibt ausschließlich in diesen Datenordner. Der Administrator heißt `Admin`.
 4. Absender und Empfänger für Website-Anfragen sind `info@brennwerkbeer.de`. Der Container übergibt E-Mails mit TLS an `smtp.ionos.de:465`; Zugangsdaten werden nicht in Kommandozeilen oder öffentliche Dateien geschrieben. Die sichere Passwortübergabe an msmtp erhält auch Sonderzeichen unverändert.
-5. Als Healthcheck `/api/index.php?action=availability` auf Port `80` verwenden. Erst nach erfolgreichem Start die Domain mit dem Server verbinden und HTTPS für `brennwerkbeer.de` und `www.brennwerkbeer.de` in dieser Coolify-Anwendung aktivieren.
+5. Den im Dockerfile enthaltenen PHP-Healthcheck übernehmen. Er prüft intern auf Port `80` die Buchungs-API `/api/index.php?action=availability` einschließlich ihrer Datenbankverbindung. Der HTTP-Healthcheck-Parser dieser Coolify-Version unterstützt kein `?` im Pfad. Erst nach erfolgreichem Start die Domain mit dem Server verbinden und HTTPS für `brennwerkbeer.de` und `www.brennwerkbeer.de` in dieser Coolify-Anwendung aktivieren.
 
 Die Umgebungsvariablen `BRENNWERK_CONFIG_FILE` und `BRENNWERK_DATA_DIR` erlauben externe Konfigurations- und Datenverzeichnisse. Der Container setzt `BRENNWERK_TRUST_PROXY=1`, da ausschließlich der vorgeschaltete Coolify-Proxy auf ihn zugreifen soll. So erhalten HTTPS-Sitzungen sichere Cookies; Anfragelimits verwenden die vom Proxy weitergegebene Clientadresse. Diese Vertrauenseinstellung nur hinter einem entsprechend konfigurierten Proxy aktivieren.
 
 Beim Umstellen der Website-DNS-Einträge bestehende MX- und SPF-Einträge für IONOS-Mail erhalten. Andere Anwendungen, Proxy-Grundeinstellungen und deren Datenträger gehören nicht zum Brennwerk-Deployment. Datenordner und Schlüssel bei Updates und Backups erhalten.
+
+Für spätere Updates zuerst den Quellstand pushen, dann in derselben Coolify-Anwendung den gewünschten Commit auswählen und bereitstellen. Ein fest eingetragener Commit bleibt auch dann aktiv, wenn auf `main` bereits neuere Änderungen liegen. Die gespeicherten Passwörter und Buchungen bleiben im eingebundenen Datenordner erhalten; die Passworteinrichtung ist bei einem Update nicht erneut nötig.
 
 ## Voraussetzungen
 

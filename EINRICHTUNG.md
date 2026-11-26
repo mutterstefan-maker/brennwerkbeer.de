@@ -1,4 +1,18 @@
-# Buchungsverwaltung auf IONOS
+# Buchungsverwaltung: Coolify und IONOS
+
+## Betrieb im eigenen Coolify-Container
+
+Das `Dockerfile` erzeugt ein eigenständiges PHP-8.4-/Apache-Image mit SQLite, PDF-Unterstützung und IONOS-SMTP. Es kopiert ausschließlich Website-Dateien und Bibliotheken. Git-Verzeichnis, Testdaten, Archive und lokale Zugangsdaten gelangen nicht in das Image.
+
+1. Image aus dem aktuellen Quellstand bauen und ausschließlich der Brennwerk-Anwendung zuordnen. Der interne HTTP-Port ist `80`; keine öffentlichen Host-Ports neben dem vorhandenen Coolify-Proxy anlegen.
+2. Einen ausschließlich für Brennwerk verwendeten persistenten Ordner nach `/var/lib/brennwerk` einbinden. Dort liegen `config.php`, die SQLite-Datenbank, die Versandwarteschlange und der Schlüssel für Stornierungslinks. Das Verzeichnis muss für `www-data` beschreibbar sein und darf nicht mit anderen Websites geteilt werden.
+3. Die interaktive Einrichtung aus dem Image ausführen: `docker run --rm -it --network none -v DEIN_BRENNWERK_DATENORDNER:/var/lib/brennwerk --entrypoint php DEIN_IMAGE /usr/local/bin/brennwerk-configure.php`. Passwörter werden verdeckt eingegeben. Die Einrichtung schreibt ausschließlich in diesen Datenordner. Der Administrator heißt `Admin`.
+4. Absender und Empfänger für Website-Anfragen sind `info@brennwerkbeer.de`. Der Container übergibt E-Mails mit TLS an `smtp.ionos.de:465`; Zugangsdaten werden nicht in Kommandozeilen oder öffentliche Dateien geschrieben. Die sichere Passwortübergabe an msmtp erhält auch Sonderzeichen unverändert.
+5. Als Healthcheck `/api/index.php?action=availability` auf Port `80` verwenden. Erst nach erfolgreichem Start die Domain mit dem Server verbinden und HTTPS für `brennwerkbeer.de` und `www.brennwerkbeer.de` in dieser Coolify-Anwendung aktivieren.
+
+Die Umgebungsvariablen `BRENNWERK_CONFIG_FILE` und `BRENNWERK_DATA_DIR` erlauben externe Konfigurations- und Datenverzeichnisse. Der Container setzt `BRENNWERK_TRUST_PROXY=1`, da ausschließlich der vorgeschaltete Coolify-Proxy auf ihn zugreifen soll. So erhalten HTTPS-Sitzungen sichere Cookies; Anfragelimits verwenden die vom Proxy weitergegebene Clientadresse. Diese Vertrauenseinstellung nur hinter einem entsprechend konfigurierten Proxy aktivieren.
+
+Beim Umstellen der Website-DNS-Einträge bestehende MX- und SPF-Einträge für IONOS-Mail erhalten. Andere Anwendungen, Proxy-Grundeinstellungen und deren Datenträger gehören nicht zum Brennwerk-Deployment. Datenordner und Schlüssel bei Updates und Backups erhalten.
 
 ## Voraussetzungen
 
@@ -8,7 +22,7 @@ PHP 8.1 oder neuer, PDO_SQLite, PHP-Sessions, für PDFs zusätzlich `mbstring` u
 
 1. `private/config.example.php` nach `private/config.php` kopieren. Die echte Konfiguration bleibt außerhalb von Git.
 2. Einen Passwort-Hash mit `php -r "echo password_hash('DEIN-LANGES-PASSWORT', PASSWORD_DEFAULT), PHP_EOL;"` erzeugen und als `password_hash` eintragen. Das Passwort selbst nicht in der Datei hinterlegen.
-3. `mail_from` auf eine gültige Absenderadresse der eigenen Domain setzen. PHP `mail()` muss auf dem Server für diese Adresse eingerichtet sein. Falls der IONOS-Tarif ausschließlich authentifiziertes SMTP erlaubt, muss vor Inbetriebnahme ein SMTP-Transport ergänzt werden. `site_url` auf die öffentliche URL des Website-Verzeichnisses setzen (Standard: `https://brennwerkbeer.de`), damit persönliche Stornierungslinks auf die richtige Website zeigen.
+3. `mail_from` auf eine gültige Absenderadresse der eigenen Domain setzen, `mail_to` bestimmt den Empfänger von Kontakt- und Holzanfragen. PHP `mail()` muss auf dem Webspace für diese Adresse eingerichtet sein. Der oben beschriebene Docker-Container enthält bereits den SMTP-Transport. `site_url` auf die öffentliche URL des Website-Verzeichnisses setzen (Standard: `https://brennwerkbeer.de`), damit persönliche Stornierungslinks auf die richtige Website zeigen.
 4. Website inklusive `api/`, `private/.htaccess`, `private/vendor/tfpdf/` mit beiden Schriftdateien und Lizenzen, `admin.html`, CSS und JavaScript hochladen. Die Datenbank wird beim ersten Aufruf erstellt. `private/` nur für den PHP-Prozess beschreibbar machen, keine pauschalen 777-Rechte setzen. PDF-Bibliothek und Schriften sind mitgeliefert; Composer und externe PDF-Dienste sind nicht erforderlich.
 5. **Vor echten Kundendaten:** `https://DEINE-DOMAIN/private/config.php` und `/private/bookings.sqlite` aufrufen. Der Server muss den direkten Zugriff mit 403 sperren. Bei Nginx ist eine entsprechende serverseitige Sperre erforderlich; `.htaccess` allein wirkt dort nicht.
 6. `/admin.html` öffnen und anmelden. Unter „Einstellungen“ manuelle oder automatische Bestätigung wählen. Standard ist manuell. Der Modus gilt ausschließlich für neue Anfragen.
@@ -26,11 +40,11 @@ PHP 8.1 oder neuer, PDO_SQLite, PHP-Sessions, für PDFs zusätzlich `mbstring` u
 - Jeder Kundeneintrag im Adminbereich bietet „PDF herunterladen“, „Drucken“ und „PDF per E-Mail senden“. Die A4-Übersicht enthält Kontaktdaten, Referenz, Anhänger, Mietzeitraum, aktuellen Status und Anmerkungen. Der PDF-Abruf erfordert eine aktive Admin-Sitzung. Interne Blockierungen erhalten kein Kundendokument.
 - Der PDF-Mailversand erfolgt auf Knopfdruck an die gespeicherte Kundenadresse und ändert den Buchungsstatus nicht. Der genaue PDF-Anhang wird in der geschützten Versandwarteschlange gespeichert, sodass ein fehlgeschlagener Versand mit derselben Datei wiederholt werden kann. Normale Reservierungs- und Status-E-Mails bleiben Textnachrichten.
 - Die bisherigen Beispieldaten aus `js/belegung.js` werden nicht mehr verwendet. Echte vorhandene Belegungen vor dem Start im Adminbereich blockieren.
-- Kontakt- und Holzformulare sind weiterhin der bisherige Platzhalter und haben noch keinen echten Versand.
+- Kontakt- und Holzanfragen werden serverseitig geprüft und an die konfigurierte Empfangsadresse gesendet. Fehlgeschlagene Übergaben bleiben in der Versandwarteschlange und sind über den Adminbereich erneut versendbar. Die öffentliche Antwort verrät keine Kundendaten. Die GitHub-Demo zeigt ausdrücklich eine Vorführung ohne Versand.
 
 ## Betrieb und Grenzen
 
-Die Datenbank `private/bookings.sqlite` enthält Kundendaten, die E-Mail-Warteschlange und gegebenenfalls PDF-Anhänge in `outbox_attachments`. Regelmäßige geschützte Backups und ein Löschkonzept für alte Kundendaten einschließlich Anhängen einrichten. Die Datenschutzerklärung vor Inbetriebnahme an die zentrale Speicherung und den Mailversand anpassen.
+Die Datenbank `bookings.sqlite` im Datenverzeichnis enthält Kundendaten, die E-Mail-Warteschlange und gegebenenfalls PDF-Anhänge in `outbox_attachments`. Beim klassischen Webspace liegt sie unter `private/`, im Container im externen Datenordner. Regelmäßige geschützte Backups und ein Löschkonzept für alte Kundendaten einschließlich Anhängen einrichten. Angaben zum Anbieter und rechtliche Pflichtangaben mit dem Betreiber abstimmen; die Umsatzsteuer-ID bleibt bis zur Rückmeldung offen.
 
 Die erste Version bietet einen Adminzugang, keine Benutzerverwaltung oder Passwort-zurücksetzen-Funktion. Das Passwort kann über einen neuen Hash in `private/config.php` geändert werden. Nach einer Stunde Inaktivität muss man sich neu anmelden. Ein Versandversuch erfolgt bei Reservierung, Statusänderung und auf Knopfdruck; ein automatischer Hintergrundversand per Cron ist noch nicht eingerichtet. Die SQLite-Datenbank muss auf einer lokalen Serverplatte liegen.
 

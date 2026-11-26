@@ -28,13 +28,14 @@ function period(array $data): array {
     return [$trailer, ...$dates];
 }
 try {
-    $configPath = dirname(__DIR__) . '/private/config.php';
+    $configPath = getenv('BRENNWERK_CONFIG_FILE') ?: dirname(__DIR__) . '/private/config.php';
     if (!is_file($configPath)) fail('Die Buchungsverwaltung ist noch nicht eingerichtet.', 503);
     $config = require $configPath;
     if (empty($config['password_hash'])) fail('Die Serverkonfiguration ist unvollständig.', 503);
     if (!extension_loaded('pdo_sqlite')) fail('Die PHP-Erweiterung PDO_SQLite fehlt. Bitte auf dem Server aktivieren.', 503);
-    if (!is_writable(dirname(__DIR__) . '/private')) fail('Das Verzeichnis private ist für PHP nicht beschreibbar. Bitte die Serverrechte prüfen.', 503);
-    $db = new PDO('sqlite:' . dirname(__DIR__) . '/private/bookings.sqlite');
+    $dataDirectory = getenv('BRENNWERK_DATA_DIR') ?: dirname(__DIR__) . '/private';
+    if (!is_dir($dataDirectory) || !is_writable($dataDirectory)) fail('Das Buchungsverzeichnis ist für PHP nicht beschreibbar. Bitte die Serverrechte prüfen.', 503);
+    $db = new PDO('sqlite:' . $dataDirectory . '/bookings.sqlite');
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $db->exec('PRAGMA busy_timeout = 5000');
     $db->exec("CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY CHECK(id=1), mode TEXT NOT NULL);
@@ -51,12 +52,22 @@ try {
     $input = $method === 'POST' ? json_decode(file_get_contents('php://input'), true) : [];
     if (!is_array($input)) fail('Ungültige Anfrage.');
     session_name('beer_admin');
-    session_set_cookie_params(['httponly' => true, 'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off', 'samesite' => 'Strict', 'path' => '/']);
+    $trustProxy = getenv('BRENNWERK_TRUST_PROXY') === '1';
+    $secureRequest = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || ($trustProxy && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $clientAddress = $_SERVER['REMOTE_ADDR'] ?? '';
+    if ($trustProxy && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $forwarded = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        $forwardedAddress = trim(end($forwarded));
+        if (filter_var($forwardedAddress, FILTER_VALIDATE_IP)) $clientAddress = $forwardedAddress;
+    }
+    session_set_cookie_params(['httponly' => true, 'secure' => $secureRequest, 'samesite' => 'Strict', 'path' => '/']);
     session_start();
     $admin = !empty($_SESSION['admin']) && ($_SESSION['active'] ?? 0) > time() - 3600;
     if ($admin) $_SESSION['active'] = time();
     function throttle(PDO $db, string $scope, int $maximum): void {
-        $key = hash('sha256', $scope . ($_SERVER['REMOTE_ADDR'] ?? '') . date('YmdH'));
+        global $clientAddress;
+        $key = hash('sha256', $scope . $clientAddress . date('YmdH'));
         $db->exec('DELETE FROM limits WHERE expires < ' . time());
         $q = $db->prepare('INSERT INTO limits VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1');
         $q->execute([$key, time() + 3600]);
@@ -129,6 +140,40 @@ try {
             'today' => date('Y-m-d'),
             'max_date' => date('Y-m-d', strtotime('+2 years')),
         ]);
+    }
+    if ($action === 'inquiry' && $method === 'POST') {
+        $recipient = $config['mail_to'] ?? 'info@brennwerkbeer.de';
+        if (!filter_var($config['mail_from'] ?? '', FILTER_VALIDATE_EMAIL) || !filter_var($recipient, FILTER_VALIDATE_EMAIL)
+            || preg_match('/[\r\n]/', $recipient)) fail('Online-Anfragen sind momentan nicht verfügbar. Bitte telefonisch melden: +49 171 2015568.', 503);
+        throttle($db, 'inquiry', (int)($config['max_requests_per_hour'] ?? 20));
+        $kind = field($input, 'kind', 20);
+        $name = field($input, 'name');
+        if ($kind === 'contact') {
+            $email = field($input, 'email', 254);
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $email)) fail('Bitte eine gültige E-Mail-Adresse eingeben.');
+            $message = field($input, 'message', 4000);
+            $subject = 'Neue Kontaktanfrage – Brennwerk Beer';
+            $body = "Kontaktanfrage über brennwerkbeer.de\n\nName: $name\nE-Mail: $email\n\nNachricht:\n$message\n";
+        } elseif ($kind === 'wood') {
+            $phone = field($input, 'phone', 80); $address = field($input, 'address', 400);
+            $type = field($input, 'wood_type', 10); $length = field($input, 'length', 10); $unit = field($input, 'unit', 10);
+            $amount = field($input, 'amount', 6); $note = field($input, 'note', 2000, false);
+            $wood = ['weich' => ['name' => 'Weichholz (Fichte / Kiefer)', 'lengths' => ['1 m', '50 cm', '33 cm', '25 cm']],
+                'hart' => ['name' => 'Hartholz (Buche, Eiche, Esche, Ahorn)', 'lengths' => ['33 cm', '25 cm']]];
+            if (!isset($wood[$type]) || !in_array($length, $wood[$type]['lengths'], true) || !in_array($unit, ['srm', 'ster'], true)
+                || !preg_match('/^[1-9][0-9]*$/', $amount) || ($unit === 'srm' && (int)$amount > 8)) fail('Bitte Holzsorte, Scheitlänge und Menge korrekt auswählen.');
+            $unitLabel = $unit === 'srm' ? 'Schüttraummeter (SRM)' : 'Ster';
+            $subject = 'Neue Brennholzanfrage – Brennwerk Beer';
+            $body = "Brennholzanfrage über brennwerkbeer.de\n\nName: $name\nTelefon: $phone\nLieferadresse: $address\n\nHolzsorte: {$wood[$type]['name']}\nScheitlänge: $length\nMenge: $amount $unitLabel\n\nAnmerkungen:\n$note\n";
+        } else {
+            fail('Ungültige Anfrage.');
+        }
+        $q = $db->prepare('INSERT INTO outbox (booking_id,recipient,subject,body) VALUES (?,?,?,?)');
+        $q->execute(['inquiry-' . bin2hex(random_bytes(8)), $recipient, $subject, $body]);
+        $mailId = (int)$db->lastInsertId();
+        deliver($db, $config);
+        $q = $db->prepare('SELECT sent_at FROM outbox WHERE id=?'); $q->execute([$mailId]);
+        reply(['ok' => true, 'sent' => (bool)$q->fetchColumn()], 201);
     }
     if ($action === 'login' && $method === 'POST') {
         throttle($db, 'login', 10);

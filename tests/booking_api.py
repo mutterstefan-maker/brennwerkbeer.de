@@ -5,6 +5,7 @@ from email.parser import BytesParser
 import http.cookiejar
 import io
 import json
+import os
 from pathlib import Path
 import shutil
 import socket
@@ -51,7 +52,12 @@ smtp = socketserver.ThreadingTCPServer(('127.0.0.1', 0), MailSink)
 smtp.daemon_threads = True
 threading.Thread(target=smtp.serve_forever, daemon=True).start()
 with tempfile.TemporaryDirectory() as directory:
-    work = Path(directory)
+    work = Path(directory) / 'www'
+    work.mkdir()
+    booking_storage = Path(directory) / 'booking-data'
+    booking_storage.mkdir()
+    config_file = booking_storage / 'config.php'
+    booking_database = booking_storage / 'bookings.sqlite'
     (work / 'api').mkdir()
     (work / 'private').mkdir()
     (work / 'scripts').mkdir()
@@ -60,8 +66,8 @@ with tempfile.TemporaryDirectory() as directory:
     shutil.copytree(root / 'private/vendor', work / 'private/vendor')
     shutil.copy(root / 'scripts/router.php', work / 'scripts/router.php')
     password_hash = subprocess.check_output([str(php), '-r', "echo password_hash('integration-test-password', PASSWORD_DEFAULT);"], text=True)
-    config = "<?php return ['password_hash'=>'" + password_hash + "','mail_from'=>'booking@example.com'];"
-    (work / 'private/config.php').write_text(config, encoding='utf-8')
+    config = "<?php return ['password_hash'=>'" + password_hash + "','mail_from'=>'booking@example.com','mail_to'=>'owner@example.com'];"
+    config_file.write_text(config, encoding='utf-8')
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
@@ -70,11 +76,13 @@ with tempfile.TemporaryDirectory() as directory:
         command += ['-d', f'extension_dir={php.parent / "ext"}', '-d', 'extension=pdo_sqlite', '-d', 'extension=mbstring']
     command += ['-S', f'127.0.0.1:{port}', '-t', str(work), str(work / 'scripts/router.php')]
     with (work / 'server.log').open('w') as log:
-        server = subprocess.Popen(command, stdout=log, stderr=log)
+        server_env = {**os.environ, 'BRENNWERK_CONFIG_FILE': str(config_file), 'BRENNWERK_DATA_DIR': str(booking_storage), 'BRENNWERK_TRUST_PROXY': '1'}
+        server = subprocess.Popen(command, stdout=log, stderr=log, env=server_env)
         try:
             opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
-            def request(action, data=None, token=None, client=opener, binary=False):
+            def request(action, data=None, token=None, client=opener, binary=False, extra_headers=None):
                 headers = {'Content-Type': 'application/json'}
+                headers.update(extra_headers or {})
                 if token:
                     headers['X-CSRF-Token'] = token
                 req = urllib.request.Request(f'http://127.0.0.1:{port}/api/index.php?action={action}', data=json.dumps(data).encode() if data is not None else None, headers=headers)
@@ -92,16 +100,21 @@ with tempfile.TemporaryDirectory() as directory:
             assert status == 200 and data['mode'] == 'manual', (status, data)
             assert data['booking_enabled'] is True
             assert data['today'] < data['max_date']
+            proxy_response = request('availability', client=urllib.request.build_opener(), binary=True, extra_headers={'X-Forwarded-Proto': 'https'})[1]
+            assert '; secure' in proxy_response['headers']['Set-Cookie'].lower()
+            http_response = request('availability', client=urllib.request.build_opener(), binary=True)[1]
+            assert '; secure' not in http_response['headers']['Set-Cookie'].lower()
+            assert booking_database.is_file() and not (work / 'private/bookings.sqlite').exists()
             for path in ('/private/config.php', '/private/bookings.sqlite', '/scripts/router.php', '/.git/config', '/.runtime/php/php.exe'):
                 try:
                     urllib.request.urlopen(f'http://127.0.0.1:{port}{path}', timeout=4)
                     raise AssertionError(f'Privater Pfad erreichbar: {path}')
                 except urllib.error.HTTPError as error:
                     assert error.code == 403, (path, error.code)
-            (work / 'private/config.php').write_text(config.replace('booking@example.com', ''), encoding='utf-8')
+            config_file.write_text(config.replace('booking@example.com', ''), encoding='utf-8')
             assert request('availability')[1]['booking_enabled'] is False
             assert request('reserve', {})[0] == 503
-            (work / 'private/config.php').write_text(config, encoding='utf-8')
+            config_file.write_text(config, encoding='utf-8')
             assert request('availability')[1]['booking_enabled'] is True
             assert request('admin')[0] == 401
             assert request('document&id=unknown')[0] == 401
@@ -142,7 +155,7 @@ with tempfile.TemporaryDirectory() as directory:
             confirmed_pdf = request(f"document&id={reserved['id']}&inline=1", binary=True)[1]
             assert confirmed_pdf['headers']['Content-Disposition'].startswith('inline;')
             assert 'Bestätigte Buchung' in ''.join(page.extract_text() for page in PdfReader(io.BytesIO(confirmed_pdf['body'])).pages)
-            with sqlite3.connect(work / 'private/bookings.sqlite') as database:
+            with sqlite3.connect(booking_database) as database:
                 messages = database.execute('SELECT body FROM outbox WHERE booking_id=? ORDER BY id', (reserved['id'],)).fetchall()
                 cancellation_link = f"https://brennwerkbeer.de/#stornierung={reserved['id']}.{reserved['cancellation_token']}"
                 assert len(messages) == 2 and all(cancellation_link in row[0] for row in messages)
@@ -171,7 +184,7 @@ with tempfile.TemporaryDirectory() as directory:
             assert request('reserve', {**booking, 'email': 'bad\r\nBcc:bad@example.com'})[0] == 400
             public = request('availability')[1]
             assert all(set(row) == {'trailer', 'date_from', 'date_to'} for row in public['periods'])
-            with sqlite3.connect(work / 'private/bookings.sqlite') as database:
+            with sqlite3.connect(booking_database) as database:
                 assert database.execute('SELECT COUNT(*) FROM outbox WHERE booking_id=?', (auto['id'],)).fetchone()[0] == 2
                 assert database.execute('SELECT COUNT(*) FROM outbox WHERE sent_at IS NULL').fetchone()[0] == 0
             database.close()
@@ -184,7 +197,7 @@ with tempfile.TemporaryDirectory() as directory:
             assert sorted(result[1]['already_cancelled'] for result in cancellations) == [False, True]
             assert not any(row['trailer'] == '2' and row['date_from'] == day for row in request('availability')[1]['periods'])
             assert next(row for row in request('admin')[1]['bookings'] if row['id'] == auto['id'])['status'] == 'cancelled'
-            with sqlite3.connect(work / 'private/bookings.sqlite') as database:
+            with sqlite3.connect(booking_database) as database:
                 assert database.execute('SELECT COUNT(*) FROM outbox WHERE booking_id=?', (auto['id'],)).fetchone()[0] == 3
                 assert database.execute('SELECT body FROM outbox WHERE booking_id=? ORDER BY id DESC LIMIT 1', (auto['id'],)).fetchone()[0].find('#stornierung=') == -1
             database.close()
@@ -205,7 +218,7 @@ with tempfile.TemporaryDirectory() as directory:
             MailSink.reject = True
             assert request('email-document', {'id': auto['id']}, csrf)[1]['sent'] is False
             assert request('admin')[1]['unsent'] == 1
-            with sqlite3.connect(work / 'private/bookings.sqlite') as database:
+            with sqlite3.connect(booking_database) as database:
                 queued_pdf = database.execute('SELECT content FROM outbox_attachments ORDER BY mail_id DESC LIMIT 1').fetchone()[0]
                 assert queued_pdf.startswith(b'%PDF-')
             database.close()
@@ -214,6 +227,29 @@ with tempfile.TemporaryDirectory() as directory:
             assert request('admin')[1]['unsent'] == 0
             retry_mime = BytesParser(policy=policy.default).parsebytes(MailSink.messages[-1])
             assert next(retry_mime.iter_attachments()).get_payload(decode=True) == queued_pdf
+            contact = {'kind': 'contact', 'name': 'Jörg Müller', 'email': 'joerg@example.com', 'message': 'Bitte um Rückruf zur Anhängermiete.', 'recipient': 'ignored@example.com'}
+            assert request('inquiry', {**contact, 'email': 'invalid'}, client=customer)[0] == 400
+            status, inquiry = request('inquiry', contact, client=customer)
+            assert status == 201 and inquiry == {'ok': True, 'sent': True}
+            contact_mime = BytesParser(policy=policy.default).parsebytes(MailSink.messages[-1])
+            assert contact_mime['To'] == 'owner@example.com'
+            contact_text = contact_mime.get_payload(decode=True).decode('utf-8')
+            assert all(value in contact_text for value in [contact['name'], contact['email'], contact['message']])
+            wood = {'kind': 'wood', 'name': 'Jörg Müller', 'phone': '012345', 'address': 'Teststraße 12, 85356 Freising', 'wood_type': 'hart', 'length': '33 cm', 'unit': 'srm', 'amount': '2', 'note': 'Bitte Rückruf vor Lieferung.'}
+            assert request('inquiry', {**wood, 'length': '1 m'}, client=customer)[0] == 400
+            assert request('inquiry', {**wood, 'amount': '9'}, client=customer)[0] == 400
+            assert request('inquiry', {**wood, 'address': ' '}, client=customer)[0] == 400
+            assert request('inquiry', wood, client=customer)[1]['sent'] is True
+            wood_mime = BytesParser(policy=policy.default).parsebytes(MailSink.messages[-1])
+            assert wood_mime['To'] == 'owner@example.com'
+            wood_text = wood_mime.get_payload(decode=True).decode('utf-8')
+            assert all(value in wood_text for value in [wood['name'], wood['phone'], wood['address'], wood['length'], wood['note']])
+            MailSink.reject = True
+            assert request('inquiry', contact, client=customer)[1]['sent'] is False
+            assert request('admin')[1]['unsent'] == 1
+            MailSink.reject = False
+            assert request('retry-mail', {}, csrf)[0] == 200
+            assert request('admin')[1]['unsent'] == 0
             MailSink.reject = True
             next_day = (datetime.now() + timedelta(days=31)).strftime('%Y-%m-%d')
             assert request('reserve', {**booking, 'date_from': next_day, 'date_to': next_day})[0] == 201
@@ -223,7 +259,7 @@ with tempfile.TemporaryDirectory() as directory:
             assert request('admin')[1]['unsent'] == 0
             assert request('logout', {}, csrf)[0] == 200
             assert request('admin')[0] == 401
-            print('PASS: Kalenderbereitschaft, geschuetzte Vorschau, Login, CSRF, Tagesreservierung, Konflikte, Freigabe, Storno, Kundenstorno mit persoenlichem Link, wiederholter und konkurrierender Storno, Blockierung, automatischer Modus, konkurrierende Anfragen, geschuetzte PDF-Dateien, PDF-Anhang mit gespeichertem Empfaenger, Versandwiederholung mit identischem Anhang, E-Mail-Warteschlange, Datenschutz, Logout')
+            print('PASS: Externe Datenhaltung, HTTPS-Proxy-Cookies, Kalenderbereitschaft, geschuetzte Vorschau, Login, CSRF, Tagesreservierung, Konflikte, Freigabe, Storno, Kundenstorno mit persoenlichem Link, wiederholter und konkurrierender Storno, Blockierung, automatischer Modus, konkurrierende Anfragen, geschuetzte PDF-Dateien, PDF-Anhang mit gespeichertem Empfaenger, Versandwiederholung mit identischem Anhang, Kontakt- und Holzanfragen, E-Mail-Warteschlange, Datenschutz, Logout')
         finally:
             server.terminate()
             server.wait(timeout=10)

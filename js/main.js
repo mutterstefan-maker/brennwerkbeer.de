@@ -447,28 +447,34 @@ document.addEventListener('DOMContentLoaded', () => {
     woodDialog.showModal();
   }));
 
-  // ---- Form submissions (mailto fallback – später durch Backend ersetzen) ----
-  function handleForm(formId, successMsg, validate) {
+  // ---- Kontakt- und Brennholzanfragen ----
+  function handleForm(formId, successMsg) {
     const form = document.getElementById(formId);
     if (!form) return;
-    form.addEventListener('submit', e => {
+    let inProgress = false;
+    form.addEventListener('submit', async e => {
       e.preventDefault();
-      if (validate && !validate()) return;
-      // TODO: Backend-Anfrage einbauen (z.B. fetch POST an /api/booking)
-      const data = Object.fromEntries(new FormData(form));
-      console.log(`[${formId}] Formular-Daten:`, data);
-
-      // Einfache Success-Anzeige
-      form.style.display = 'none';
-      const div = document.createElement('div');
-      div.className = 'form-success';
-      div.style.display = 'block';
-      div.innerHTML = `
-        <div class="success-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div>
-        <h4>${successMsg}</h4>
-        <p>Du bekommst so schnell wie möglich eine Rückmeldung.</p>
-      `;
-      form.parentNode.appendChild(div);
+      if (inProgress) return;
+      inProgress = true;
+      const button = form.querySelector('button[type="submit"]');
+      button.disabled = true;
+      form.querySelector('[data-inquiry-error]')?.remove();
+      try {
+        if (!bookingDemo) await bookingRequest('inquiry', { ...Object.fromEntries(new FormData(form)), kind: formId === 'woodForm' ? 'wood' : 'contact' });
+        form.style.display = 'none';
+        const div = document.createElement('div');
+        div.className = 'form-success'; div.setAttribute('role', 'status');
+        const title = document.createElement('h4');
+        title.textContent = bookingDemo ? 'Demo: Anfrage vorgeführt' : successMsg;
+        const text = document.createElement('p');
+        text.textContent = bookingDemo ? 'Es wurde keine Anfrage oder E-Mail versendet. Bitte nur Testdaten verwenden.' : 'Du bekommst so schnell wie möglich eine Rückmeldung.';
+        div.append(title, text); form.parentNode.append(div);
+      } catch (error) {
+        const message = document.createElement('p');
+        message.dataset.inquiryError = 'true'; message.setAttribute('role', 'alert');
+        message.textContent = error.message || 'Deine Anfrage konnte nicht gesendet werden. Bitte versuche es erneut oder rufe uns an: +49 171 2015568.';
+        form.append(message);
+      } finally { inProgress = false; button.disabled = false; }
     });
   }
 
@@ -529,8 +535,8 @@ document.addEventListener('DOMContentLoaded', () => {
       setHint(error.message || 'Reservierung fehlgeschlagen. Bitte telefonisch melden.', true);
     } finally { bookingInProgress = false; updateBookingSubmit(); }
   });
-  handleForm('woodForm',    'Holzbestellung eingegangen!');
-  handleForm('contactForm', 'Nachricht gesendet!');
+  handleForm('woodForm',    'Holzanfrage eingegangen!');
+  handleForm('contactForm', 'Nachricht eingegangen!');
 
   function fillDemoCustomer() {
     document.getElementById('book-name').value = 'Max Mustermann';

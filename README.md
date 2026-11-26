@@ -1,6 +1,6 @@
 # Michael Beer – Anhängerverleih & Holzhandel
 
-Website für Michael Beer, Langenbach (Bayern).
+Website für Michael Beer, Freising (Bayern).
 
 ## Leistungen
 - Anhängerverleih (tagesbasiert, Online-Buchung)
@@ -8,13 +8,17 @@ Website für Michael Beer, Langenbach (Bayern).
 
 ## Technik
 - Reines HTML / CSS / JavaScript
-- AOS-Animationen
+- React-/GSAP-Carousel
 - Responsive Design
+- Lokal ausgelieferte Schriftarten
+- Separates PHP-/Apache-Docker-Image für Coolify mit persistenten Buchungsdaten und IONOS-SMTP
 
 ## Entwicklung
 Für den funktionsfähigen Buchungskalender `npm start` ausführen und `http://127.0.0.1:8080/` öffnen. Der Startbefehl verwendet installiertes PHP oder die lokale Laufzeit unter `.runtime/php/php.exe` und aktiviert PDO_SQLite. Mit `BRENNWERK_PHP` kann eine andere PHP-Datei gewählt werden; `BRENNWERK_PORT` ändert den Port. Einrichtung und Betrieb: [EINRICHTUNG.md](EINRICHTUNG.md).
 
 Adminbereich: `/admin.html`. Enthält Reservierungsfreigabe, Stornierung, eigene Terminblockierungen, Kunden-PDFs zum Herunterladen und Drucken, PDF-Versand an die gespeicherte Kundenadresse und die Umschaltung zwischen manueller und automatischer Bestätigung. Die PDF-Erzeugung nutzt die mitgelieferte PHP-Bibliothek und benötigt mbstring und zlib.
+
+Produktivbetrieb über das `Dockerfile`: eigener persistenter Datenordner unter `/var/lib/brennwerk`, Konfiguration über die verdeckte Eingabe in `docker/configure.php`, interner Port 80 und Weiterleitung ausschließlich über den vorhandenen Coolify-Proxy. Kontakt- und Holzanfragen sowie Buchungs-E-Mails verwenden das konfigurierte IONOS-Postfach. Einzelheiten und Update-Hinweise stehen in [EINRICHTUNG.md](EINRICHTUNG.md).
 
 ## Kalender und Verwaltung vorführen
 

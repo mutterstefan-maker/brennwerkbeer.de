@@ -1,5 +1,7 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__ . '/booking-email.php';
+require_once __DIR__ . '/mail-message.php';
 date_default_timezone_set('Europe/Berlin');
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -42,6 +44,7 @@ try {
         INSERT OR IGNORE INTO settings VALUES (1, 'manual');
         CREATE TABLE IF NOT EXISTS bookings (id TEXT PRIMARY KEY, trailer TEXT NOT NULL, date_from TEXT NOT NULL, date_to TEXT NOT NULL, name TEXT NOT NULL, email TEXT NOT NULL, phone TEXT NOT NULL, note TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS outbox (id INTEGER PRIMARY KEY, booking_id TEXT NOT NULL, recipient TEXT NOT NULL, subject TEXT NOT NULL, body TEXT NOT NULL, sent_at TEXT, attempts INTEGER NOT NULL DEFAULT 0, claimed_until INTEGER NOT NULL DEFAULT 0);
+        CREATE TABLE IF NOT EXISTS outbox_html (mail_id INTEGER PRIMARY KEY, content TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS outbox_attachments (mail_id INTEGER PRIMARY KEY, filename TEXT NOT NULL, content BLOB NOT NULL);
         CREATE TABLE IF NOT EXISTS cancellation_key (id INTEGER PRIMARY KEY CHECK(id=1), secret TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires INTEGER NOT NULL);");
@@ -84,19 +87,14 @@ try {
         return hash_hmac('sha256', 'cancel:' . $id, $secret);
     }
     function queueMail(PDO $db, array $b, string $status, array $config, ?string $attachment = null): int {
-        $labels = ['pending' => 'Reservierung eingegangen', 'confirmed' => 'Buchung bestätigt', 'cancelled' => 'Reservierung / Buchung storniert'];
-        $trailer = $b['trailer'] === '1' ? '3-Seitenkipper 3,5 t' : 'Planenanhänger 2,7 t';
-        $text = "Hallo {$b['name']},\n\n{$labels[$status]}.\nAnhänger: $trailer\nZeitraum: {$b['date_from']} bis {$b['date_to']} (beide Tage einschließlich)\nReferenz: {$b['id']}\n\n";
-        if ($attachment !== null) $text = "Hallo {$b['name']},\n\nanbei deine Buchungsübersicht als PDF.\nAktueller Status: {$labels[$status]}\nAnhänger: $trailer\nZeitraum: {$b['date_from']} bis {$b['date_to']}\nReferenz: {$b['id']}\n\n";
-        $text .= $status === 'pending' ? "Die Tage sind für dich reserviert. Deine Buchung wird nach manueller Prüfung separat bestätigt.\n" : '';
-        if ($status !== 'cancelled') {
-            $url = rtrim($config['site_url'] ?? 'https://brennwerkbeer.de', '/') . '/#stornierung=' . $b['id'] . '.' . cancellationToken($db, $b['id']);
-            $text .= "\nDu kannst deine Reservierung oder Buchung selbst zurücknehmen:\n$url\nErst nach deiner Bestätigung auf der Website werden die Tage wieder freigegeben. Bitte diesen persönlichen Link nicht weitergeben.\n";
-        }
-        $text .= "\nBei Fragen: +49 171 2015568\nMichael Beer";
+        $url = $status === 'cancelled' ? null
+            : rtrim($config['site_url'] ?? 'https://brennwerkbeer.de', '/') . '/#stornierung=' . $b['id'] . '.' . cancellationToken($db, $b['id']);
+        $message = bookingEmail($b, $status, $url, $attachment !== null);
         $q = $db->prepare('INSERT INTO outbox (booking_id,recipient,subject,body) VALUES (?,?,?,?)');
-        $q->execute([$b['id'], $b['email'], ($attachment !== null ? 'Deine Buchungsübersicht' : $labels[$status]) . ' – Michael Beer', $text]);
+        $q->execute([$b['id'], $b['email'], $message['subject'], $message['text']]);
         $mailId = (int)$db->lastInsertId();
+        $q = $db->prepare('INSERT INTO outbox_html VALUES (?,?)');
+        $q->execute([$mailId, $message['html']]);
         if ($attachment !== null) {
             $q = $db->prepare('INSERT INTO outbox_attachments VALUES (?,?,?)');
             $q->bindValue(1, $mailId, PDO::PARAM_INT);
@@ -112,17 +110,15 @@ try {
             $claim->execute([time() + 600, $mail['id'], time()]);
             if (!$claim->rowCount()) continue;
             try {
-                $headers = ['From' => $config['mail_from'], 'MIME-Version' => '1.0', 'Content-Type' => 'text/plain; charset=UTF-8'];
-                $body = $mail['body'];
+                $q = $db->prepare('SELECT content FROM outbox_html WHERE mail_id=?');
+                $q->execute([$mail['id']]); $html = $q->fetchColumn();
                 $q = $db->prepare('SELECT filename,content FROM outbox_attachments WHERE mail_id=?');
                 $q->execute([$mail['id']]); $attachment = $q->fetch(PDO::FETCH_ASSOC);
-                if ($attachment) {
-                    $boundary = '=_Brennwerk_' . bin2hex(random_bytes(18));
-                    $headers['Content-Type'] = 'multipart/mixed; boundary="' . $boundary . '"';
-                    $body = '--' . $boundary . "\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($mail['body']), 76, "\r\n");
-                    $body .= '--' . $boundary . "\r\nContent-Type: application/pdf\r\nContent-Disposition: attachment; filename=\"" . $attachment['filename'] . "\"\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode($attachment['content']), 76, "\r\n") . '--' . $boundary . "--\r\n";
-                }
-                $ok = function_exists('mail') && @mail($mail['recipient'], '=?UTF-8?B?' . base64_encode($mail['subject']) . '?=', $body, $headers);
+                $message = mailMessage($mail['body'], $html === false ? null : $html, $attachment ?: null);
+                $headers = ['From' => 'Brennwerk Beer <' . $config['mail_from'] . '>', 'MIME-Version' => '1.0'] + $message['headers'];
+                $subject = function_exists('mb_encode_mimeheader') ? mb_encode_mimeheader($mail['subject'], 'UTF-8', 'B', "\r\n")
+                    : '=?UTF-8?B?' . base64_encode($mail['subject']) . '?=';
+                $ok = function_exists('mail') && @mail($mail['recipient'], $subject, $message['body'], $headers);
             } catch (Throwable $error) {
                 error_log('Booking mail transport failed.');
                 $ok = false;

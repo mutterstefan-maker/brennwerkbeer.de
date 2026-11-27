@@ -21,16 +21,16 @@ notice.setAttribute('role', 'region');
 notice.setAttribute('aria-labelledby', 'cookie-notice-title');
 notice.innerHTML = `
   <h2 id="cookie-notice-title" tabindex="-1">Cookies &amp; Datenschutz</h2>
-  <p>Wir verwenden ausschließlich technisch notwendige Cookies für den Betrieb der Website und die Buchungsverwaltung. Es gibt keine Tracking- oder Werbe-Cookies.</p>
+  <p>Für die Anmeldung zur Buchungsverwaltung verwenden wir ein technisch notwendiges Sitzungscookie. Es gibt keine Tracking- oder Werbe-Cookies. Dieser Hinweis fragt keine Einwilligung ab.</p>
   <details class="cookie-notice__details">
     <summary>Cookie-Details anzeigen</summary>
     <div class="cookie-notice__detail-body">
-      <p><strong>Technisch notwendig · immer aktiv</strong><br>Diese Funktionen benötigen wir für den sicheren Betrieb. Sie erfordern keine Einwilligung.</p>
+      <p><strong>Technisch notwendige Funktionen</strong><br>Diese Speicherfunktionen benötigen wir für die angeforderte Anmeldung oder zum Merken deiner Entscheidung, diesen Hinweis zu schließen. Sie erfordern keine Einwilligung.</p>
       <dl>
-        <div><dt>beer_admin · Sitzungscookie</dt><dd>Verwaltet die Sitzung der Buchungsverwaltung. Wird bei Anfragen an die Buchungs-API gesetzt und beim Ende der Browsersitzung gelöscht.</dd></div>
-        <div><dt>brennwerk.cookie-notice.v1 · lokaler Browserspeicher</dt><dd>Merkt sich nach „Verstanden“ die Bestätigung dieses Hinweises. Nach 180 Tagen wird sie beim nächsten Seitenaufruf verworfen und der Hinweis erneut angezeigt.</dd></div>
+        <div><dt>beer_admin · Sitzungscookie</dt><dd>Verwaltet die Sitzung der Buchungsverwaltung. Wird erst bei erfolgreicher Anmeldung gesetzt und beim Ende der Browsersitzung gelöscht. Öffentliche Belegungsabfragen und Buchungen benötigen dieses Cookie nicht.</dd></div>
+        <div><dt>brennwerk.cookie-notice.v1 · lokaler Browserspeicher</dt><dd>Merkt sich nach „Hinweis schließen“, dass du diesen Hinweis geschlossen hast. Nach 180 Tagen wird der Eintrag beim nächsten Seitenaufruf verworfen und der Hinweis erneut angezeigt.</dd></div>
       </dl>
-      <p>Wir verwenden keine optionalen Cookies, Analyse- oder Marketingdienste. Deine Cookie-Einstellungen kannst du jederzeit über den Link im Seitenfuß erneut öffnen.</p>
+      <p>Wir verwenden keine optionalen Cookies, Analyse- oder Marketingdienste. Diese Informationen kannst du jederzeit über „Cookie-Informationen“ im Seitenfuß erneut öffnen.</p>
     </div>
   </details>
   <div class="cookie-notice__bottom">
@@ -38,7 +38,7 @@ notice.innerHTML = `
       <a href="datenschutz.html#cookies">Datenschutz</a>
       <a href="impressum.html">Impressum</a>
     </nav>
-    <button type="button" class="cookie-notice__confirm">Verstanden</button>
+    <button type="button" class="cookie-notice__confirm">Hinweis schließen</button>
   </div>
 `;
 

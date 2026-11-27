@@ -115,7 +115,8 @@ with tempfile.TemporaryDirectory() as directory:
         server_env = {**os.environ, 'BRENNWERK_CONFIG_FILE': str(config_file), 'BRENNWERK_DATA_DIR': str(booking_storage), 'BRENNWERK_TRUST_PROXY': '1'}
         server = subprocess.Popen(command, stdout=log, stderr=log, env=server_env)
         try:
-            opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+            admin_cookies = http.cookiejar.CookieJar()
+            opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(admin_cookies))
             def request(action, data=None, token=None, client=opener, binary=False, extra_headers=None):
                 headers = {'Content-Type': 'application/json'}
                 headers.update(extra_headers or {})
@@ -136,9 +137,17 @@ with tempfile.TemporaryDirectory() as directory:
             assert status == 200 and data['mode'] == 'manual', (status, data)
             assert data['booking_enabled'] is True
             assert data['today'] < data['max_date']
-            proxy_response = request('availability', client=urllib.request.build_opener(), binary=True, extra_headers={'X-Forwarded-Proto': 'https'})[1]
+            assert not list(admin_cookies), 'Public availability must not create a session cookie'
+            for headers in ({}, {'X-Forwarded-Proto': 'https'}, {'Cookie': 'beer_admin=unused-public-session'}):
+                public_response = request('availability', client=urllib.request.build_opener(), binary=True, extra_headers=headers)[1]
+                assert 'Set-Cookie' not in public_response['headers'], 'Public availability must not set cookies'
+            assert not list(work.glob('sess_*')), 'Public availability must not create or resume server sessions'
+            login_data = {'username': 'Admin', 'password': 'integration-test-password'}
+            proxy_response = request('login', login_data, client=urllib.request.build_opener(), binary=True, extra_headers={'X-Forwarded-Proto': 'https'})[1]
             assert '; secure' in proxy_response['headers']['Set-Cookie'].lower()
-            http_response = request('availability', client=urllib.request.build_opener(), binary=True)[1]
+            assert '; httponly' in proxy_response['headers']['Set-Cookie'].lower()
+            assert '; samesite=strict' in proxy_response['headers']['Set-Cookie'].lower()
+            http_response = request('login', login_data, client=urllib.request.build_opener(), binary=True)[1]
             assert '; secure' not in http_response['headers']['Set-Cookie'].lower()
             assert booking_database.is_file() and not (work / 'private/bookings.sqlite').exists()
             for path in ('/private/config.php', '/private/bookings.sqlite', '/api/booking-email.php', '/api/mail-message.php', '/scripts/router.php', '/.git/config', '/.runtime/php/php.exe'):
@@ -157,8 +166,10 @@ with tempfile.TemporaryDirectory() as directory:
             assert request('email-document', {'id': 'unknown'})[0] == 401
             assert request('login', {'username': 'Admin', 'password': 'wrong'})[0] == 401
             assert request('login', {'username': 'Andere', 'password': 'integration-test-password'})[0] == 401
+            assert not list(admin_cookies), 'Unauthorized requests and failed logins must not create cookies'
             status, data = request('login', {'username': 'Admin', 'password': 'integration-test-password'})
             assert status == 200
+            assert any(cookie.name == 'beer_admin' for cookie in admin_cookies), 'Successful login must create the admin session'
             csrf = data['csrf']
             assert request('settings', {'mode': 'automatic'})[0] == 403
             from datetime import datetime, timedelta

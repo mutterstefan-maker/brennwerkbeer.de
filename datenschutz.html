@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="css/style.css?v=20261112-workshop" />
   <link rel="stylesheet" href="css/workshop.css?v=20261112-workshop" />
   <link rel="stylesheet" href="css/cookie-notice.css?v=20261127" />
-  <script type="module" src="js/cookie-notice.js?v=20261127-live"></script>
+  <script type="module" src="js/cookie-notice.js?v=20261127-info"></script>
 </head>
 <body>
   <div class="legal-page container">
@@ -37,13 +37,13 @@
 
     <h2 id="cookies">7. Cookies und lokaler Browserspeicher</h2>
     <p>Diese Website verwendet ausschließlich technisch notwendige Cookies und lokale Speicherfunktionen. Es werden keine Tracking- oder Werbe-Cookies, Analyse- oder Marketingdienste eingesetzt. Technisch notwendige Speicherungen und Zugriffe erfolgen auf Grundlage von § 25 Abs. 2 Nr. 2 TDDDG; hierfür ist keine Einwilligung erforderlich.</p>
-    <p><strong>Sitzungscookie „beer_admin“:</strong> Bei Anfragen an die Buchungs-API wird ein Sitzungscookie gesetzt. Es verwaltet insbesondere die sichere Anmeldung in der Buchungsverwaltung und wird mit dem Ende der Browsersitzung gelöscht. Das Cookie ist gegen JavaScript-Zugriffe geschützt (HttpOnly), wird mit SameSite=Strict und bei HTTPS-Verbindungen mit Secure gesetzt.</p>
-    <p><strong>Cookie-Hinweis „brennwerk.cookie-notice.v1“:</strong> Nach einem Klick auf „Verstanden“ speichern wir die Version und den Zeitpunkt der Bestätigung ausschließlich im lokalen Browserspeicher (Local Storage). Nach 180 Tagen wird der Eintrag beim nächsten Seitenaufruf verworfen und der Hinweis erneut angezeigt. Du kannst ihn vorher über deine Browsereinstellungen löschen. Ist der Browserspeicher gesperrt, wird die Bestätigung nur für den aktuellen Seitenaufruf berücksichtigt.</p>
-    <p>Die Cookie-Einstellungen und Informationen zu den verwendeten Speicherfunktionen erreichst du jederzeit über „Cookie-Einstellungen“ im Seitenfuß. Da keine optionalen Cookies verwendet werden, gibt es keine zustimmungspflichtigen Kategorien zum Aktivieren oder Deaktivieren.</p>
+    <p><strong>Sitzungscookie „beer_admin“:</strong> Erst bei erfolgreicher Anmeldung zur Buchungsverwaltung wird ein Sitzungscookie gesetzt. Es ermöglicht die sichere Verwaltungssitzung und wird mit dem Ende der Browsersitzung gelöscht. Öffentliche Belegungsabfragen, Buchungen, Anfragen und Kundenstornierungen benötigen dieses Cookie nicht und starten keine Verwaltungssitzung. Das Cookie ist gegen JavaScript-Zugriffe geschützt (HttpOnly), wird mit SameSite=Strict und bei HTTPS-Verbindungen mit Secure gesetzt.</p>
+    <p><strong>Cookie-Hinweis „brennwerk.cookie-notice.v1“:</strong> Nach einem Klick auf „Hinweis schließen“ speichern wir die Version und den Zeitpunkt dieser Auswahl ausschließlich im lokalen Browserspeicher (Local Storage). Nach 180 Tagen wird der Eintrag beim nächsten Seitenaufruf verworfen und der Hinweis erneut angezeigt. Du kannst ihn vorher über deine Browsereinstellungen löschen. Ist der Browserspeicher gesperrt, wird die Bestätigung nur für den aktuellen Seitenaufruf berücksichtigt.</p>
+    <p>Informationen zu den verwendeten Speicherfunktionen erreichst du jederzeit über „Cookie-Informationen“ im Seitenfuß. Der Hinweis fragt keine Einwilligung ab. Da keine optionalen Cookies verwendet werden, gibt es keine zustimmungspflichtigen Kategorien zum Aktivieren oder Deaktivieren.</p>
   </div>
   <footer class="container cookie-settings-footer" aria-label="Rechtliche Informationen">
     <a href="impressum.html">Impressum</a>
-    <a href="#cookies" data-cookie-settings>Cookie-Einstellungen</a>
+    <a href="#cookies" data-cookie-settings>Cookie-Informationen</a>
   </footer>
 </body>
 </html>

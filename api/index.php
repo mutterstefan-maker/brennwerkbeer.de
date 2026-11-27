@@ -65,9 +65,6 @@ try {
         if (filter_var($forwardedAddress, FILTER_VALIDATE_IP)) $clientAddress = $forwardedAddress;
     }
     session_set_cookie_params(['httponly' => true, 'secure' => $secureRequest, 'samesite' => 'Strict', 'path' => '/']);
-    session_start();
-    $admin = !empty($_SESSION['admin']) && ($_SESSION['active'] ?? 0) > time() - 3600;
-    if ($admin) $_SESSION['active'] = time();
     function throttle(PDO $db, string $scope, int $maximum): void {
         global $clientAddress;
         $key = hash('sha256', $scope . $clientAddress . date('YmdH'));
@@ -176,6 +173,7 @@ try {
         $username = field($input, 'username', 100);
         $passwordValid = password_verify(field($input, 'password', 1000), $config['password_hash']);
         if (!hash_equals($config['username'] ?? 'Admin', $username) || !$passwordValid) fail('Anmeldung fehlgeschlagen.', 401);
+        session_start();
         session_regenerate_id(true); $_SESSION = ['admin' => true, 'active' => time(), 'csrf' => bin2hex(random_bytes(32))];
         reply(['csrf' => $_SESSION['csrf']]);
     }
@@ -219,7 +217,12 @@ try {
         if (!$alreadyCancelled) deliver($db, $config);
         reply(['id' => $id, 'status' => 'cancelled', 'already_cancelled' => $alreadyCancelled]);
     }
+    // Public booking actions above neither create nor resume an admin session.
+    if (empty($_COOKIE[session_name()])) fail('Bitte anmelden.', 401);
+    session_start();
+    $admin = !empty($_SESSION['admin']) && ($_SESSION['active'] ?? 0) > time() - 3600;
     if (!$admin) fail('Bitte anmelden.', 401);
+    $_SESSION['active'] = time();
     if ($method === 'POST' && !hash_equals($_SESSION['csrf'], $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '')) fail('Sitzung ungültig. Bitte neu anmelden.', 403);
     if ($action === 'admin' && $method === 'GET') reply(['csrf' => $_SESSION['csrf'], 'mode' => $db->query('SELECT mode FROM settings WHERE id=1')->fetchColumn(), 'bookings' => $db->query('SELECT * FROM bookings ORDER BY date_from, created_at')->fetchAll(PDO::FETCH_ASSOC), 'unsent' => (int)$db->query('SELECT COUNT(*) FROM outbox WHERE sent_at IS NULL')->fetchColumn()]);
     if (($action === 'document' && $method === 'GET') || ($action === 'email-document' && $method === 'POST')) {

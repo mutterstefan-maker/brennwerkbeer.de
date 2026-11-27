@@ -1,7 +1,10 @@
+import { isBookingDemoLocation } from './booking-demo.js?v=20261126-admin-documents';
+
 // Shared notice for the website's exclusively necessary cookies and storage.
 const STORAGE_KEY = 'brennwerk.cookie-notice.v1';
 const VERSION = 1;
 const MAX_AGE = 180 * 24 * 60 * 60 * 1000;
+const showDemoDetails = isBookingDemoLocation();
 
 function isAcknowledged() {
   try {
@@ -29,7 +32,7 @@ notice.innerHTML = `
       <dl>
         <div><dt>beer_admin · Sitzungscookie</dt><dd>Verwaltet die Sitzung der Buchungsverwaltung. Wird bei Anfragen an die Buchungs-API gesetzt und beim Ende der Browsersitzung gelöscht.</dd></div>
         <div><dt>brennwerk.cookie-notice.v1 · lokaler Browserspeicher</dt><dd>Merkt sich nach „Verstanden“ die Bestätigung dieses Hinweises. Nach 180 Tagen wird sie beim nächsten Seitenaufruf verworfen und der Hinweis erneut angezeigt.</dd></div>
-        <div><dt>brennwerk.booking-demo.v1 · nur im Demo-Modus</dt><dd>Speichert Beispielbuchungen für die Kalender-Demo in deinem Browser. Die Demo startet an einem neuen Tag frisch; über „Demo zurücksetzen“ kannst du die Testdaten zurücksetzen.</dd></div>
+        ${showDemoDetails ? '<div><dt>brennwerk.booking-demo.v1 · nur im Demo-Modus</dt><dd>Speichert Beispielbuchungen für die Kalender-Demo in deinem Browser. Die Demo startet an einem neuen Tag frisch; über „Demo zurücksetzen“ kannst du die Testdaten zurücksetzen.</dd></div>' : ''}
       </dl>
       <p>Wir verwenden keine optionalen Cookies, Analyse- oder Marketingdienste. Deine Cookie-Einstellungen kannst du jederzeit über den Link im Seitenfuß erneut öffnen.</p>
     </div>

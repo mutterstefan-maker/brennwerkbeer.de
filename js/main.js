@@ -2,10 +2,13 @@
 // Michael Beer – main.js
 // =============================================
 
-import { createBookingDemo, DEMO_STORAGE_KEY, isBookingDemoLocation, mountDemoBanner } from './booking-demo.js?v=20261126-admin-documents';
+import { loadSiteContent } from './site-content.js?v=20261127-admin-cms';
 
-document.addEventListener('DOMContentLoaded', () => {
-  const bookingDemo = isBookingDemoLocation() ? createBookingDemo() : null;
+document.addEventListener('DOMContentLoaded', async () => {
+  const bookingDemo = null;
+  await loadSiteContent();
+  const siteContent = window.brennwerkSite?.content || {};
+  const contactPhone = siteContent.contact_phone || '+49 171 2015568';
   // ---- Burger menu ----
   const burger = document.getElementById('burger');
   const mobileMenu = document.getElementById('mobileMenu');
@@ -154,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('#bookingForm .form-note').textContent = bookingDemo
         ? 'Demo: Deine Testbuchung erscheint in der Demo-Verwaltung. Es entstehen keine echten Buchungen und es werden keine E-Mails versendet.'
         : !bookingEnabled
-        ? 'Online-Reservierung momentan nicht verfügbar. Bitte telefonisch reservieren: +49 171 2015568.'
+        ? `Online-Reservierung momentan nicht verfügbar. Bitte telefonisch reservieren: ${contactPhone}.`
         : data.mode === 'automatic'
         ? 'Nach dem Absenden wird deine Buchung automatisch bestätigt. Du erhältst eine Reservierungs- und eine Buchungsbestätigung per E-Mail. Über den persönlichen Link darin kannst du deine Buchung zurücknehmen.'
         : 'Deine Tage werden sofort reserviert. Du erhältst eine E-Mail zur Reservierung und nach manueller Freigabe eine Buchungsbestätigung. Über den persönlichen Link darin kannst du deine Reservierung zurücknehmen.';
@@ -171,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (request !== availabilityRequest) return false;
       availabilityReady = false;
       updateBookingSubmit();
-      setHint('Online-Reservierung momentan nicht verfügbar. Bitte telefonisch melden: +49 171 2015568.', true);
+      setHint(`Online-Reservierung momentan nicht verfügbar. Bitte telefonisch melden: ${contactPhone}.`, true);
       renderCalendar();
       return false;
     } finally {
@@ -336,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const data = await bookingRequest('cancellation-details', credentials);
       if (request !== cancellationRequest) return;
-      const name = data.trailer === '1' ? '3-Seitenkipper 3,5 t' : 'Planenanhänger 2,7 t';
+      const name = data.trailer_name || trailerSelect.querySelector(`option[value="${CSS.escape(data.trailer)}"]`)?.textContent || 'Anhänger';
       cancellationSummary.textContent = `${name}\n${fmt(data.date_from)} – ${fmt(data.date_to)}\nReferenz: ${data.id}\nStatus: ${data.status === 'cancelled' ? 'Zurückgenommen' : data.status === 'confirmed' ? 'Bestätigt' : 'Reserviert'}`;
       cancellationSummary.hidden = false;
       if (data.status === 'cancelled') {
@@ -405,9 +408,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }));
 
   // ---- Brennholz: Längen & Preisberechnung ----
+  const managedContent = siteContent;
+  const lengths = (value, fallback) => String(value || fallback).split(',').map(item => item.trim()).filter(Boolean);
   const WOOD = {
-    weich: { lengths: ['1 m', '50 cm', '33 cm', '25 cm'], price: { srm: 65, ster: 85 } },
-    hart:  { lengths: ['33 cm', '25 cm'],                 price: { srm: 100, ster: 140 } }
+    weich: { lengths: lengths(managedContent.wood_soft_lengths, '1 m, 50 cm, 33 cm, 25 cm'), price: { srm: Number(String(managedContent.wood_soft_srm || '65').replace(',', '.')), ster: Number(String(managedContent.wood_soft_ster || '85').replace(',', '.')) } },
+    hart:  { lengths: lengths(managedContent.wood_hard_lengths, '33 cm, 25 cm'), price: { srm: Number(String(managedContent.wood_hard_srm || '100').replace(',', '.')), ster: Number(String(managedContent.wood_hard_ster || '140').replace(',', '.')) } }
   };
   const MAX_SRM      = 8;
   const woodType     = document.getElementById('wood-type');
@@ -472,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (error) {
         const message = document.createElement('p');
         message.dataset.inquiryError = 'true'; message.setAttribute('role', 'alert');
-        message.textContent = error.message || 'Deine Anfrage konnte nicht gesendet werden. Bitte versuche es erneut oder rufe uns an: +49 171 2015568.';
+        message.textContent = error.message || `Deine Anfrage konnte nicht gesendet werden. Bitte versuche es erneut oder rufe uns an: ${contactPhone}.`;
         form.append(message);
       } finally { inProgress = false; button.disabled = false; }
     });
@@ -486,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     if (!bookingEnabled) {
-      setHint('Bitte telefonisch reservieren: +49 171 2015568.', true);
+      setHint(`Bitte telefonisch reservieren: ${contactPhone}.`, true);
       return;
     }
     bookingInProgress = true;

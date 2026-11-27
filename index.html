@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="css/fonts.css?v=20261126" />
   <link rel="stylesheet" href="css/style.css?v=20261126-customer-cancellation" />
   <link rel="stylesheet" href="css/workshop.css?v=20261122-contact-layout" />
-  <link rel="stylesheet" href="carousel-assets/carousel.css?v=20261122-no-preview-strip" />
+  <link rel="stylesheet" href="carousel-assets/carousel.css?v=20261127-admin-cms" />
   <link rel="stylesheet" href="css/cookie-notice.css?v=20261127-ga4" />
   <script type="module" src="js/cookie-notice.js?v=20261127-ga4"></script>
 </head>
@@ -19,8 +19,8 @@
   <!-- ========== INFOLEISTE ========== -->
   <div class="topbar">
     <div class="container topbar__inner">
-      <span>Kepserstraße 81 · 85356 Freising</span>
-      <a href="tel:+491712015568">Telefon: +49 171 2015568</a>
+      <span id="topbar-address">Kepserstraße 81 · 85356 Freising</span>
+      <a id="topbar-phone" data-site-phone href="tel:+491712015568">Telefon: +49 171 2015568</a>
     </div>
   </div>
 
@@ -62,9 +62,9 @@
   <section class="section" id="anhaenger">
     <div class="container">
       <div class="section__header">
-        <p class="section__eyebrow">Anhängerverleih</p>
-        <h2>Wähl deinen Anhänger.</h2>
-        <p>Tageweise mieten, in Freising abholen – Lieferung auf Anfrage.</p>
+        <p class="section__eyebrow" id="trailer-eyebrow">Anhängerverleih</p>
+        <h2 id="trailer-title">Wähl deinen Anhänger.</h2>
+        <p id="trailer-intro">Tageweise mieten, in Freising abholen – Lieferung auf Anfrage.</p>
       </div>
 
       <div class="trailer-grid">
@@ -132,10 +132,7 @@
         <!-- Trailer Card 3: folgt, sobald Bilder & Daten da sind -->
       </div>
 
-      <p class="terms">
-        <strong>Für alle Anhänger:</strong> Preise inkl. Versicherung · mehrere Tage auf Anfrage ·
-        150 € Kaution und gültiger Ausweis bei Abholung · Lieferung auf Anfrage · auch für Gewerbe.
-      </p>
+      <p class="terms"><strong>Für alle Anhänger:</strong> <span id="trailer-terms">Preise inkl. Versicherung · mehrere Tage auf Anfrage · 150 € Kaution und gültiger Ausweis bei Abholung · Lieferung auf Anfrage · auch für Gewerbe.</span></p>
     </div>
   </section>
 
@@ -143,57 +140,54 @@
   <section class="section" id="holz">
     <div class="container">
       <div class="section__header">
-        <p class="section__eyebrow">Brennholz</p>
-        <h2>Holz bestellen. Abladen lassen.</h2>
-        <p>Weich- oder Hartholz in deiner Scheitlänge – wir liefern und kippen direkt bei dir ab.</p>
+        <p class="section__eyebrow" id="wood-eyebrow">Brennholz</p>
+        <h2 id="wood-title">Holz bestellen. Abladen lassen.</h2>
+        <p id="wood-intro">Weich- oder Hartholz in deiner Scheitlänge – wir liefern und kippen direkt bei dir ab.</p>
       </div>
 
       <div class="wood-grid">
         <article class="wood-card">
-          <h3>Weichholz</h3>
-          <p class="wood-card__species">Fichte / Kiefer, gespalten</p>
-          <p class="wood-card__desc">Brennt schnell an und gibt rasch Wärme – gut zum Anheizen und für die Übergangszeit.</p>
-          <p class="wood-card__lengths"><span>Scheitlängen</span> 1 m · 50 cm · 33 cm · 25 cm</p>
+          <h3 id="wood-soft-name">Weichholz</h3>
+          <p class="wood-card__species" id="wood-soft-species">Fichte / Kiefer, gespalten</p>
+          <p class="wood-card__desc" id="wood-soft-description">Brennt schnell an und gibt rasch Wärme – gut zum Anheizen und für die Übergangszeit.</p>
+          <p class="wood-card__lengths"><span>Scheitlängen</span> <span id="wood-soft-lengths">1 m · 50 cm · 33 cm · 25 cm</span></p>
           <dl class="wood-prices">
-            <div><dt>Schüttraummeter <small>lose geschüttet</small></dt><dd>65 €</dd></div>
-            <div><dt>Ster <small>gestapelt</small></dt><dd>85 €</dd></div>
+            <div><dt>Schüttraummeter <small>lose geschüttet</small></dt><dd id="wood-soft-srm">65 €</dd></div>
+            <div><dt>Ster <small>gestapelt</small></dt><dd id="wood-soft-ster">85 €</dd></div>
           </dl>
           <button type="button" class="btn btn--wood btn--full" data-order="weich">Weichholz bestellen</button>
         </article>
 
         <article class="wood-card">
-          <h3>Hartholz</h3>
-          <p class="wood-card__species">Buche, Eiche, Esche, Ahorn, gespalten</p>
-          <p class="wood-card__desc">Hoher Heizwert und lange Brenndauer – das klassische Brennholz für Kaminofen und Heizkamin.</p>
-          <p class="wood-card__lengths"><span>Scheitlängen</span> 33 cm · 25 cm</p>
+          <h3 id="wood-hard-name">Hartholz</h3>
+          <p class="wood-card__species" id="wood-hard-species">Buche, Eiche, Esche, Ahorn, gespalten</p>
+          <p class="wood-card__desc" id="wood-hard-description">Hoher Heizwert und lange Brenndauer – das klassische Brennholz für Kaminofen und Heizkamin.</p>
+          <p class="wood-card__lengths"><span>Scheitlängen</span> <span id="wood-hard-lengths">33 cm · 25 cm</span></p>
           <dl class="wood-prices">
-            <div><dt>Schüttraummeter <small>lose geschüttet</small></dt><dd>100 €</dd></div>
-            <div><dt>Ster <small>gestapelt</small></dt><dd>140 €</dd></div>
+            <div><dt>Schüttraummeter <small>lose geschüttet</small></dt><dd id="wood-hard-srm">100 €</dd></div>
+            <div><dt>Ster <small>gestapelt</small></dt><dd id="wood-hard-ster">140 €</dd></div>
           </dl>
           <button type="button" class="btn btn--wood btn--full" data-order="hart">Hartholz bestellen</button>
         </article>
       </div>
 
-      <p class="terms">
-        <strong>Lieferung:</strong> Lieferkosten nach Entfernung (pro km) · max. 8 Schüttraummeter pro Lieferung ·
-        das Holz wird abgekippt, nicht eingeräumt.
-      </p>
+      <p class="terms"><strong>Lieferung:</strong> <span id="wood-terms">Lieferkosten nach Entfernung (pro km) · max. 8 Schüttraummeter pro Lieferung · das Holz wird abgekippt, nicht eingeräumt.</span></p>
     </div>
   </section>
 
   <!-- ========== ABLAUF ========== -->
-  <section class="handover" id="ablauf" aria-labelledby="handoverTitle">
+  <section class="handover" id="ablauf" aria-labelledby="handover-title">
     <div class="container handover__inner">
       <figure class="handover__photo">
         <img src="img/anhaenger/3-seitenkipper-seite.avif" alt="Unser 3-Seitenkipper mit Gitteraufsatz" width="900" height="600" loading="lazy" />
         <figcaption>Unser 3-Seitenkipper · 3,5 t Gesamtgewicht</figcaption>
       </figure>
       <div class="handover__text">
-        <h2 id="handoverTitle">Die Übergabe machen<br />wir persönlich.</h2>
-        <p>Du holst den Anhänger bei Michael Beer in der Kepserstraße 81 in Freising ab. Den Termin stimmen wir vorher mit dir ab. Bring deinen Ausweis und 150 € Kaution mit.</p>
-        <p>Brennholz liefern wir zu dir und kippen es ab. Liefertermin und Kosten klären wir bei deiner Anfrage; eingeräumt wird das Holz nicht.</p>
-        <p class="handover__note">Deine Anfrage ist erst bestätigt, wenn Michael sich bei dir gemeldet hat – in der Regel innerhalb von 24 Stunden.</p>
-        <a class="handover__phone" href="tel:+491712015568">+49 171 2015568</a>
+        <h2 id="handover-title">Die Übergabe machen wir persönlich.</h2>
+        <p id="handover-text-1">Du holst den Anhänger bei Michael Beer in der Kepserstraße 81 in Freising ab. Den Termin stimmen wir vorher mit dir ab. Bring deinen Ausweis und 150 € Kaution mit.</p>
+        <p id="handover-text-2">Brennholz liefern wir zu dir und kippen es ab. Liefertermin und Kosten klären wir bei deiner Anfrage; eingeräumt wird das Holz nicht.</p>
+        <p class="handover__note" id="handover-note">Deine Anfrage ist erst bestätigt, wenn Michael sich bei dir gemeldet hat – in der Regel innerhalb von 24 Stunden.</p>
+        <a class="handover__phone" data-site-phone href="tel:+491712015568">+49 171 2015568</a>
         <span class="handover__phone-note">Für Fragen zur Abholung oder Lieferung</span>
       </div>
     </div>
@@ -205,14 +199,14 @@
       <div>
         <div class="section__header section__header--tight">
           <p class="section__eyebrow">Kontakt</p>
-          <h2>Michael Beer in Freising</h2>
-          <p>Am schnellsten erreichst du Michael telefonisch.</p>
+          <h2 id="contact-title">Michael Beer in Freising</h2>
+          <p id="contact-intro">Am schnellsten erreichst du Michael telefonisch.</p>
         </div>
         <dl class="contact-list">
-          <div><dt>Adresse</dt><dd>Michael Beer<br />Kepserstraße 81<br />85356 Freising</dd></div>
-          <div><dt>Telefon</dt><dd><a href="tel:+491712015568">+49 171 2015568</a></dd></div>
-          <div><dt>WhatsApp</dt><dd><a href="https://wa.me/491712015568?text=Hallo%20Michael%2C%20ich%20habe%20eine%20Frage%3A%20" target="_blank" rel="noopener">Nachricht schreiben</a></dd></div>
-          <div><dt>E-Mail</dt><dd><a href="mailto:info@brennwerkbeer.de">info@brennwerkbeer.de</a></dd></div>
+          <div><dt>Adresse</dt><dd id="contact-address">Michael Beer<br />Kepserstraße 81<br />85356 Freising</dd></div>
+          <div><dt>Telefon</dt><dd><a id="contact-phone" data-site-phone href="tel:+491712015568">+49 171 2015568</a></dd></div>
+          <div><dt>WhatsApp</dt><dd><a data-site-whatsapp href="https://wa.me/491712015568?text=Hallo%20Michael%2C%20ich%20habe%20eine%20Frage%3A%20" target="_blank" rel="noopener">Nachricht schreiben</a></dd></div>
+          <div><dt>E-Mail</dt><dd><a id="contact-email" href="mailto:info@brennwerkbeer.de">info@brennwerkbeer.de</a></dd></div>
         </dl>
       </div>
       <form class="booking-form panel" id="contactForm">
@@ -239,8 +233,8 @@
   <footer class="footer">
     <div class="container footer__inner">
       <div class="footer__brand">
-        <strong>Brennwerk Beer</strong>
-        <p>Anhängerverleih & Brennholz · Kepserstraße 81 · 85356 Freising</p>
+        <strong id="footer-business">Brennwerk Beer</strong>
+        <p id="footer-description">Anhängerverleih & Brennholz · Kepserstraße 81 · 85356 Freising</p>
       </div>
       <div class="footer__links">
         <a href="impressum.html">Impressum</a>
@@ -250,7 +244,7 @@
       </div>
     </div>
     <div class="container footer__copy">
-      <p>© 2026 Michael Beer · Webseite by <a href="https://chefblick.de" target="_blank" rel="noopener">ChefBlick</a></p>
+      <p>© 2026 <span data-site-name>Michael Beer</span> · Webseite by <a href="https://chefblick.de" target="_blank" rel="noopener">ChefBlick</a></p>
     </div>
   </footer>
 
@@ -420,8 +414,8 @@
     <a href="https://wa.me/491712015568?text=Hallo%20Michael%2C%20ich%20habe%20eine%20Frage%3A%20" class="quick-contact__wa" target="_blank" rel="noopener"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg><span>WhatsApp</span></a>
   </div>
 
-  <script type="module" src="js/main.js?v=20261126-live"></script>
+  <script type="module" src="js/main.js?v=20261127-admin-cms"></script>
 
-  <script type="module" src="carousel-assets/carousel.js?v=20261122-no-preview-strip"></script>
+  <script type="module" src="carousel-assets/carousel.js?v=20261127-admin-cms"></script>
 </body>
 </html>

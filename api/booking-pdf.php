@@ -5,13 +5,19 @@ require_once dirname(__DIR__) . '/private/vendor/tfpdf/font/unifont/ttfonts.php'
 require_once dirname(__DIR__) . '/private/vendor/tfpdf/tfpdf.php';
 
 final class BookingPdf extends tFPDF {
+    private array $site = [];
+    public function setSite(array $site): void { $this->site = $site; }
     public function Header() {
         $this->SetTextColor(35, 46, 52);
         $this->SetFont('DejaVu', 'B', 21);
         $this->Cell(110, 9, 'BRENNWERK BEER');
         $this->SetFont('DejaVu', '', 9);
         $this->SetXY(132, 18);
-        $this->MultiCell(60, 5, "Michael Beer\nKepserstraße 81\n85356 Freising\n+49 171 2015568", 0, 'R');
+        $name = $this->site['contact_name'] ?? 'Michael Beer';
+        $street = $this->site['contact_street'] ?? 'Kepserstraße 81';
+        $location = ($this->site['contact_postal'] ?? '85356') . ' ' . ($this->site['contact_city'] ?? 'Freising');
+        $phone = $this->site['contact_phone'] ?? '+49 171 2015568';
+        $this->MultiCell(60, 5, "$name\n$street\n$location\n$phone", 0, 'R');
         $this->SetXY(18, 29);
         $this->SetFont('DejaVu', '', 10);
         $this->Cell(105, 7, 'Anhängerverleih & Brennholz');
@@ -28,7 +34,7 @@ final class BookingPdf extends tFPDF {
         $this->Line(18, $this->GetY(), 192, $this->GetY());
         $this->SetFont('DejaVu', '', 8);
         $this->SetTextColor(87, 98, 106);
-        $this->Cell(140, 8, 'Michael Beer | Kepserstraße 81 | 85356 Freising');
+        $this->Cell(140, 8, ($this->site['contact_name'] ?? 'Michael Beer') . ' | ' . ($this->site['contact_street'] ?? 'Kepserstraße 81') . ' | ' . ($this->site['contact_postal'] ?? '85356') . ' ' . ($this->site['contact_city'] ?? 'Freising'));
         $this->Cell(34, 8, 'Seite ' . $this->PageNo(), 0, 0, 'R');
     }
 
@@ -55,14 +61,15 @@ function bookingDocumentFilename(array $booking): string {
     return 'Brennwerk-Beer-' . preg_replace('/[^a-zA-Z0-9-]/', '', $booking['id']) . '.pdf';
 }
 
-function bookingPdf(array $booking): string {
+function bookingPdf(array $booking, array $site = []): string {
     $pdf = new BookingPdf('P', 'mm', 'A4');
+    $pdf->setSite($site);
     $pdf->SetMargins(18, 18, 18);
     $pdf->SetAutoPageBreak(true, 25);
     $pdf->AddFont('DejaVu', '', 'DejaVuSansCondensed.ttf', true);
     $pdf->AddFont('DejaVu', 'B', 'DejaVuSansCondensed-Bold.ttf', true);
     $pdf->SetTitle('Buchungsübersicht ' . $booking['id'], true);
-    $pdf->SetAuthor('Michael Beer', true);
+    $pdf->SetAuthor($site['contact_name'] ?? 'Michael Beer', true);
     $pdf->SetCreator('Brennwerk Beer', true);
     $pdf->AddPage();
     $pdf->SetFont('DejaVu', 'B', 20);
@@ -76,7 +83,7 @@ function bookingPdf(array $booking): string {
     $pdf->section('Buchung');
     $pdf->detail('Referenz', $booking['id']);
     $pdf->detail('Status', $labels[$booking['status']] ?? $booking['status']);
-    $pdf->detail('Anhänger', $booking['trailer'] === '1' ? '3-Seitenkipper 3,5 t' : 'Planenanhänger 2,7 t');
+    $pdf->detail('Anhänger', $booking['trailer_name'] ?? ($booking['trailer'] === '1' ? '3-Seitenkipper 3,5 t' : 'Planenanhänger 2,7 t'));
     $pdf->detail('Mietbeginn', $formatDate($booking['date_from']));
     $pdf->detail('Mietende', $formatDate($booking['date_to']));
     $pdf->detail('Mietdauer', $days . ' ' . ($days === 1 ? 'Tag' : 'Tage') . ' (beide Grenztage einschließlich)');

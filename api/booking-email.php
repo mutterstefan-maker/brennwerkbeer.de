@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /** Render once when queuing so retries keep the same booking details and links. */
-function bookingEmail(array $booking, string $status, ?string $cancellationUrl, bool $hasDocument = false): array {
+function bookingEmail(array $booking, string $status, ?string $cancellationUrl, bool $hasDocument = false, array $site = []): array {
     $labels = ['pending' => 'Reservierung eingegangen', 'confirmed' => 'Buchung bestätigt', 'cancelled' => 'Reservierung / Buchung storniert'];
     if (!isset($labels[$status])) throw new InvalidArgumentException('Unknown booking email status.');
     $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -12,7 +12,16 @@ function bookingEmail(array $booking, string $status, ?string $cancellationUrl, 
     $duration = $days . ($days === 1 ? ' Miettag' : ' Miettage');
     $dateFrom = $from->format('d.m.Y');
     $dateTo = $to->format('d.m.Y');
-    $trailer = $booking['trailer'] === '1' ? '3-Seitenkipper 3,5 t' : 'Planenanhänger 2,7 t';
+    $trailer = $booking['trailer_name'] ?? ($booking['trailer'] === '1' ? '3-Seitenkipper 3,5 t' : 'Planenanhänger 2,7 t');
+    $contactName = (string)($site['contact_name'] ?? 'Michael Beer');
+    $contactStreet = (string)($site['contact_street'] ?? 'Kepserstraße 81');
+    $contactLocation = trim((string)($site['contact_postal'] ?? '85356') . ' ' . (string)($site['contact_city'] ?? 'Freising'));
+    $contactPhone = (string)($site['contact_phone'] ?? '+49 171 2015568');
+    $contactEmail = (string)($site['contact_email'] ?? 'info@brennwerkbeer.de');
+    $contactNameHtml = $escape($contactName); $contactStreetHtml = $escape($contactStreet); $contactLocationHtml = $escape($contactLocation);
+    $contactPhoneHtml = $escape($contactPhone); $contactEmailHtml = $escape($contactEmail);
+    $contactPhoneHref = preg_replace('/[^+0-9]/', '', $contactPhone);
+    $mapsUrl = 'https://www.google.com/maps/search/?api=1&amp;query=' . rawurlencode($contactStreet . ', ' . $contactLocation);
     $headline = $hasDocument ? 'Deine Buchungsübersicht.' : [
         'pending' => 'Reservierung eingegangen.',
         'confirmed' => 'Deine Buchung ist bestätigt.',
@@ -42,13 +51,13 @@ function bookingEmail(array $booking, string $status, ?string $cancellationUrl, 
     $pickupText = '';
     $pickupHtml = '';
     if ($status !== 'cancelled') {
-        $pickupText = "\nAbholung\nMichael Beer\nKepserstraße 81\n85356 Freising\nDen genauen Abholtermin stimmen wir vorher mit dir ab.\n\nBitte mitbringen:\n- 150 € Kaution\n- Gültigen Führerschein\n- Gültigen Ausweis\n";
-        $pickupHtml = <<<'HTML'
+        $pickupText = "\nAbholung\n$contactName\n$contactStreet\n$contactLocation\nDen genauen Abholtermin stimmen wir vorher mit dir ab.\n\nBitte mitbringen:\n- 150 € Kaution\n- Gültigen Führerschein\n- Gültigen Ausweis\n";
+        $pickupHtml = <<<HTML
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-top:24px;background:#F6F4F0;border:1px solid #E8E3DB;border-radius:4px;">
   <tr><td style="padding:22px 22px 18px;">
     <h2 style="margin:0 0 12px;color:#202023;font-size:19px;line-height:25px;">Deine Abholung</h2>
-    <p style="margin:0 0 8px;color:#39393F;font-size:15px;line-height:23px;"><strong>Michael Beer</strong><br>Kepserstraße 81<br>85356 Freising</p>
-    <p style="margin:0 0 14px;font-size:14px;line-height:22px;"><a href="https://www.google.com/maps/search/?api=1&amp;query=Kepserstra%C3%9Fe%2081%2C%2085356%20Freising" style="color:#7B4708;text-decoration:underline;">Route zur Abholung öffnen</a></p>
+    <p style="margin:0 0 8px;color:#39393F;font-size:15px;line-height:23px;"><strong>$contactNameHtml</strong><br>$contactStreetHtml<br>$contactLocationHtml</p>
+    <p style="margin:0 0 14px;font-size:14px;line-height:22px;"><a href="$mapsUrl" style="color:#7B4708;text-decoration:underline;">Route zur Abholung öffnen</a></p>
     <p style="margin:0;color:#606068;font-size:14px;line-height:22px;">Den genauen Abholtermin stimmen wir vorher mit dir ab.</p>
   </td></tr>
   <tr><td style="padding:18px 22px 22px;border-top:1px solid #E8E3DB;">
@@ -81,7 +90,7 @@ HTML;
     }
 
     $text = "Hallo {$booking['name']},\n\n" . ($hasDocument ? $documentText . "\n" : '') . $labels[$status] . ".\n$description\n\nAnhänger: $trailer\nZeitraum: $dateFrom bis $dateTo (beide Tage einschließlich)\nMietdauer: $duration\nReferenz: {$booking['id']}\n";
-    $text .= $pickupText . $actionText . "\nBei Fragen zur Buchung oder Abholung:\n+49 171 2015568\ninfo@brennwerkbeer.de\n\nMichael Beer · Brennwerk Beer\nKepserstraße 81 · 85356 Freising\nhttps://brennwerkbeer.de\n";
+    $text .= $pickupText . $actionText . "\nBei Fragen zur Buchung oder Abholung:\n$contactPhone\n$contactEmail\n\n$contactName · Brennwerk Beer\n$contactStreet · $contactLocation\nhttps://brennwerkbeer.de\n";
     $html = <<<HTML
 <!doctype html>
 <html lang="de">
@@ -140,15 +149,15 @@ HTML;
     </table>
     $pickupHtml
     $actionHtml
-    <p style="margin:28px 0 0;color:#39393F;font-size:15px;line-height:24px;">Viele Grüße aus Freising<br><strong>Michael Beer</strong></p>
+    <p style="margin:28px 0 0;color:#39393F;font-size:15px;line-height:24px;">Viele Grüße<br><strong>$contactNameHtml</strong></p>
   </td></tr>
   <tr><td class="mail-padding" style="padding:22px 32px;background:#F7F7F8;border-top:1px solid #E5E5E8;">
     <p style="margin:0 0 6px;color:#39393F;font-size:14px;font-weight:bold;line-height:22px;">Fragen zur Buchung oder Abholung?</p>
-    <p style="margin:0;color:#606068;font-size:14px;line-height:24px;"><a href="tel:+491712015568" style="color:#39393F;text-decoration:underline;">+49 171 2015568</a><br><a href="mailto:info@brennwerkbeer.de" style="color:#39393F;text-decoration:underline;">info@brennwerkbeer.de</a></p>
+    <p style="margin:0;color:#606068;font-size:14px;line-height:24px;"><a href="tel:$contactPhoneHref" style="color:#39393F;text-decoration:underline;">$contactPhoneHtml</a><br><a href="mailto:$contactEmailHtml" style="color:#39393F;text-decoration:underline;">$contactEmailHtml</a></p>
   </td></tr>
 </table>
 <!--[if mso]></td></tr></table><![endif]-->
-<p style="margin:20px 0 0;color:#777780;font-size:11px;line-height:19px;text-align:center;">Michael Beer &nbsp;&middot;&nbsp; Kepserstraße 81 &nbsp;&middot;&nbsp; 85356 Freising<br><a href="https://brennwerkbeer.de/impressum.html" style="color:#606068;text-decoration:underline;">Impressum</a> &nbsp;&middot;&nbsp; <a href="https://brennwerkbeer.de/datenschutz.html" style="color:#606068;text-decoration:underline;">Datenschutz</a></p>
+<p style="margin:20px 0 0;color:#777780;font-size:11px;line-height:19px;text-align:center;">$contactNameHtml &nbsp;&middot;&nbsp; $contactStreetHtml &nbsp;&middot;&nbsp; $contactLocationHtml<br><a href="https://brennwerkbeer.de/impressum.html" style="color:#606068;text-decoration:underline;">Impressum</a> &nbsp;&middot;&nbsp; <a href="https://brennwerkbeer.de/datenschutz.html" style="color:#606068;text-decoration:underline;">Datenschutz</a></p>
 </td></tr></table>
 </body>
 </html>

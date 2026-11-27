@@ -6,6 +6,11 @@ const dateTime = value => new Date(value).toLocaleString('de-DE', {
 });
 
 export function printBookingDocument(booking) {
+  const site = window.brennwerkSite?.content || {};
+  const contactName = site.contact_name || 'Michael Beer';
+  const contactStreet = site.contact_street || 'Kepserstraße 81';
+  const contactLocation = `${site.contact_postal || '85356'} ${site.contact_city || 'Freising'}`;
+  const contactPhone = site.contact_phone || '+49 171 2015568';
   document.getElementById('booking-print')?.remove();
   const sheet = document.createElement('section');
   sheet.id = 'booking-print';
@@ -21,7 +26,7 @@ export function printBookingDocument(booking) {
   const brand = add(header, 'div', '');
   add(brand, 'strong', 'BRENNWERK BEER');
   add(brand, 'p', 'Anhängerverleih & Brennholz');
-  add(header, 'p', 'Michael Beer\nKepserstraße 81\n85356 Freising\n+49 171 2015568', 'booking-print__address');
+  add(header, 'p', `${contactName}\n${contactStreet}\n${contactLocation}\n${contactPhone}`, 'booking-print__address');
   add(sheet, 'h1', 'Buchungsübersicht');
   add(sheet, 'p', `Erstellt am ${dateTime(new Date().toISOString())} Uhr`, 'booking-print__date');
   const details = (title, rows) => {
@@ -35,7 +40,7 @@ export function printBookingDocument(booking) {
   };
   const days = Math.round((Date.parse(booking.date_to) - Date.parse(booking.date_from)) / 86400000) + 1;
   details('Buchung', [
-    ['Referenz', booking.id], ['Status', statuses[booking.status] || booking.status], ['Anhänger', names[booking.trailer]],
+    ['Referenz', booking.id], ['Status', statuses[booking.status] || booking.status], ['Anhänger', booking.trailer_name || names[booking.trailer] || booking.trailer],
     ['Mietbeginn', date(booking.date_from)], ['Mietende', date(booking.date_to)],
     ['Mietdauer', `${days} ${days === 1 ? 'Tag' : 'Tage'} (beide Grenztage einschließlich)`],
     ['Eingegangen', `${dateTime(booking.created_at)} Uhr`],
@@ -46,7 +51,7 @@ export function printBookingDocument(booking) {
   add(sheet, 'p', booking.status === 'pending'
     ? 'Diese Übersicht dokumentiert deine Reservierung. Die Buchung wird nach Prüfung separat bestätigt.'
     : booking.status === 'cancelled' ? 'Diese Reservierung / Buchung wurde storniert.' : 'Deine Buchung ist bestätigt.', 'booking-print__date');
-  add(sheet, 'footer', 'Michael Beer | Kepserstraße 81 | 85356 Freising');
+  add(sheet, 'footer', `${contactName} | ${contactStreet} | ${contactLocation}`);
   document.body.append(sheet);
   window.addEventListener('afterprint', () => sheet.remove(), { once: true });
   try { window.print(); } catch (error) { sheet.remove(); throw error; }

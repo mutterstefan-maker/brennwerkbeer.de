@@ -18,6 +18,16 @@ Für automatische Updates ist die GitHub-App `brennwerkbeer-autodeploy` ausschli
 
 Nach erfolgreicher Einrichtung genügt ein Push nach `main`; Coolify startet die Bereitstellung automatisch. Die Einrichtung mit einem echten Push prüfen: Ohne manuellen Redeploy muss ein neues Deployment mit genau diesem Commit erscheinen und erfolgreich mit einem gesunden Container enden. Im Bereitstellungsprotokoll den tatsächlich verwendeten Commit kontrollieren. Die gespeicherten Passwörter und Buchungen bleiben im eingebundenen Datenordner erhalten; die Passworteinrichtung ist bei einem Update nicht erneut nötig.
 
+## Google Analytics später anschließen
+
+Die Einbindung ist vorbereitet und bleibt mit leerer `measurementId` in `js/analytics-config.json` ausgeschaltet. Die Konfiguration wird ohne Browsercache abgerufen. Bei einer gültigen GA4-Mess-ID (`G-…`) erscheint automatisch die Kategorie „Statistik mit Google Analytics“ mit gleichwertigen Schaltflächen „Alle ablehnen“, „Auswahl speichern“ und „Alle akzeptieren“. Eine frühere Bestätigung des reinen Hinweises erteilt keine Statistik-Einwilligung.
+
+Vor dem Eintragen der Mess-ID im Google-Analytics-Konto die Datenverarbeitungsbedingungen abschließen, Google-Signale/Werbefunktionen ausschalten, die erweiterte Messung deaktivieren (die Website sendet selbst bereinigte Seitenaufrufe) und die Aufbewahrung der Nutzer- und Ereignisdaten festlegen. Die tatsächliche Aufbewahrungsfrist und die zutreffenden Übermittlungsgrundlagen anschließend in Abschnitt 8 der Datenschutzerklärung ergänzen. Die Mess-ID alleine ändert diese kontoseitigen Einstellungen nicht.
+
+Danach in `js/analytics-config.json` den leeren Wert durch die Mess-ID ersetzen und nach `main` pushen. Keinen weiteren Google-Tag und keinen zusätzlichen Tag-Manager-Schnipsel einfügen: Die vorhandene Einbindung lädt Google erst nach aktiver Zustimmung (Basic Consent Mode). Sie hält Werbeeinwilligungen auf „denied“, entfernt Query-Strings und Fragmente aus den eigenen Seitenaufrufen und schließt Verwaltung und persönliche Stornierungsansichten aus. Der Widerruf über den Cookie-Link deaktiviert die Messung und löscht erreichbare Analytics-Cookies. Zustimmung und Ablehnung gelten höchstens 180 Tage und nur für die konfigurierte Mess-ID und Abfrageversion.
+
+Prüfen: Vor Zustimmung und nach „Alle ablehnen“ darf kein Google-Skript geladen werden. Erst nach Zustimmung darf ein bereinigter Seitenaufruf erscheinen. Widerruf und erneuter Besuch müssen die gespeicherte Ablehnung beachten. Automatisierte Prüfungen ohne Datenübermittlung an Google: `node --test tests/analytics-consent.test.mjs`.
+
 ## Voraussetzungen
 
 PHP 8.1 oder neuer, PDO_SQLite, PHP-Sessions, für PDFs zusätzlich `mbstring` und `zlib`, Apache mit aktiven `.htaccess`-Regeln und ein beschreibbares Verzeichnis `private/`. Die Website muss über HTTPS laufen. Reines statisches Hosting und VS-Code-Live-Server reichen nicht mehr für Buchungen aus.

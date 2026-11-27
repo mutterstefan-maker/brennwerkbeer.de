@@ -465,7 +465,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       button.disabled = true;
       form.querySelector('[data-inquiry-error]')?.remove();
       try {
-        if (!bookingDemo) await bookingRequest('inquiry', { ...Object.fromEntries(new FormData(form)), kind: formId === 'woodForm' ? 'wood' : 'contact' });
+        if (!bookingDemo) {
+          const result = await bookingRequest('inquiry', { ...Object.fromEntries(new FormData(form)), kind: formId === 'woodForm' ? 'wood' : 'contact' });
+          if (!result.sent) throw new Error(`Die Nachricht konnte noch nicht per E-Mail versendet werden. Bitte rufe uns an: ${contactPhone}.`);
+        }
         form.style.display = 'none';
         const div = document.createElement('div');
         div.className = 'form-success'; div.setAttribute('role', 'status');

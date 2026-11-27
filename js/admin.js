@@ -165,6 +165,14 @@ import { printBookingDocument } from './booking-document.js?v=20261127-admin-cms
 
   document.querySelectorAll('[data-admin-tab]').forEach(button => button.addEventListener('click', () => { document.querySelectorAll('[data-admin-tab]').forEach(tab => tab.classList.toggle('is-active', tab === button)); document.querySelectorAll('[data-admin-panel]').forEach(panel => { panel.hidden = panel.dataset.adminPanel !== button.dataset.adminTab; }); history.replaceState(null, '', `#${button.dataset.adminTab}`); }));
   const initialTab = document.querySelector(`[data-admin-tab="${location.hash.slice(1)}"]`); if (initialTab) initialTab.click();
+  document.querySelectorAll('[data-settings-tab]').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('[data-settings-tab]').forEach(tab => tab.classList.toggle('is-active', tab === button));
+    document.querySelectorAll('[data-settings-panel]').forEach(panel => { panel.hidden = panel.dataset.settingsPanel !== button.dataset.settingsTab; });
+  }));
+  document.querySelectorAll('[data-content-tab]').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('[data-content-tab]').forEach(tab => tab.classList.toggle('is-active', tab === button));
+    document.querySelectorAll('[data-content-panel]').forEach(panel => { panel.hidden = panel.dataset.contentPanel !== button.dataset.contentTab; });
+  }));
 
   bindForm('login', 'login', () => ({ username: $('username').value, password: $('password').value }), 'Angemeldet.');
   bindForm('settings', 'settings', () => ({ mode: $('mode').value }), 'Einstellung gespeichert.');

@@ -109,6 +109,28 @@ try {
         }
         return $mailId;
     }
+    function queueOwnerBookingMail(PDO $db, array $b, array $config): int {
+        $site = siteContent($db);
+        $recipient = trim((string)($config['mail_to'] ?? $site['contact_email'] ?? 'info@brennwerkbeer.de'));
+        if (!filter_var($recipient, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $recipient)) {
+            fail('Die Benachrichtigungsadresse ist nicht gültig. Bitte die Serverkonfiguration prüfen.', 503);
+        }
+        $trailer = trailerName($db, (string)$b['trailer']);
+        $status = $b['status'] === 'confirmed' ? 'Buchung' : 'Reservierung';
+        $subject = "Neue $status – $trailer";
+        $body = "Neue $status über brennwerkbeer.de\n\n"
+            . "Anhänger: $trailer\n"
+            . "Zeitraum: {$b['date_from']} bis {$b['date_to']}\n"
+            . "Name: {$b['name']}\n"
+            . "E-Mail: {$b['email']}\n"
+            . "Telefon: {$b['phone']}\n"
+            . "Anmerkung: " . ($b['note'] !== '' ? $b['note'] : '–') . "\n\n"
+            . "Referenz: {$b['id']}\n"
+            . rtrim((string)($config['site_url'] ?? 'https://brennwerkbeer.de'), '/') . "/admin.html#bookings\n";
+        $q = $db->prepare('INSERT INTO outbox (booking_id,recipient,subject,body) VALUES (?,?,?,?)');
+        $q->execute([$b['id'], $recipient, $subject, $body]);
+        return (int)$db->lastInsertId();
+    }
     function deliver(PDO $db, array $config): void {
         foreach ($db->query('SELECT * FROM outbox WHERE sent_at IS NULL ORDER BY id LIMIT 20')->fetchAll(PDO::FETCH_ASSOC) as $mail) {
             $claim = $db->prepare('UPDATE outbox SET claimed_until=? WHERE id=? AND sent_at IS NULL AND claimed_until < ?');
@@ -220,6 +242,7 @@ try {
         $q = $db->prepare('INSERT INTO bookings VALUES (?,?,?,?,?,?,?,?,?,?)'); $q->execute(array_values($b));
         queueMail($db, $b, 'pending', $config);
         if ($b['status'] === 'confirmed') queueMail($db, $b, 'confirmed', $config);
+        queueOwnerBookingMail($db, $b, $config);
         $db->exec('COMMIT'); deliver($db, $config);
         reply(['id' => $b['id'], 'status' => $b['status'], 'cancellation_token' => cancellationToken($db, $b['id'])], 201);
     }

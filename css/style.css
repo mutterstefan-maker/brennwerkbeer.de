@@ -538,8 +538,28 @@ body:has(.modal[open]) { overflow: hidden; }
   box-shadow: 0 2px 8px rgba(0,0,0,.25);
 }
 .quick-contact .icon { font-size: 1.25rem; }
-.quick-contact__wa { background: #1F8F4E; }
+.quick-contact__wa {
+  position: relative;
+  background: #1F8F4E;
+  animation: whatsappGlow 2.4s ease-in-out infinite;
+}
+.quick-contact__wa .icon { animation: whatsappWiggle 2.4s ease-in-out infinite; transform-origin: 50% 70%; }
 .quick-contact__wa:hover { background: #18733E; }
+@keyframes whatsappGlow {
+  0%, 58%, 100% { box-shadow: 0 8px 26px rgba(31, 143, 78, .32); }
+  68% { box-shadow: 0 8px 28px rgba(31, 143, 78, .75), 0 0 0 0 rgba(53, 214, 118, .5); }
+  84% { box-shadow: 0 8px 28px rgba(31, 143, 78, .48), 0 0 0 13px rgba(53, 214, 118, 0); }
+}
+@keyframes whatsappWiggle {
+  0%, 58%, 100% { transform: rotate(0deg) scale(1); }
+  64% { transform: rotate(-13deg) scale(1.18); }
+  70% { transform: rotate(13deg) scale(1.18); }
+  76% { transform: rotate(-9deg) scale(1.12); }
+  82% { transform: rotate(0deg) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .quick-contact__wa, .quick-contact__wa .icon { animation: none; }
+}
 .quick-contact__call { display: none !important; background: #29292D; }
 
 /* ---- RECHTLICHES ---- */

@@ -1,0 +1,47 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "android-app/**"
+      - ".github/workflows/android-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Java einrichten
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Gradle einrichten
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: APK bauen
+        working-directory: android-app
+        run: gradle assembleDebug --no-daemon
+
+      - name: APK benennen
+        run: cp android-app/app/build/outputs/apk/debug/app-debug.apk Brennwerk-Beer.apk
+
+      - name: APK bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Brennwerk-Beer-APK
+          path: Brennwerk-Beer.apk
+          if-no-files-found: error
+          retention-days: 90
+

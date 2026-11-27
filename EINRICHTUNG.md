@@ -14,7 +14,9 @@ Die Umgebungsvariablen `BRENNWERK_CONFIG_FILE` und `BRENNWERK_DATA_DIR` erlauben
 
 Beim Umstellen der Website-DNS-Einträge bestehende MX- und SPF-Einträge für IONOS-Mail erhalten. Andere Anwendungen, Proxy-Grundeinstellungen und deren Datenträger gehören nicht zum Brennwerk-Deployment. Datenordner und Schlüssel bei Updates und Backups erhalten.
 
-Für spätere Updates zuerst den Quellstand nach `main` pushen und dann dieselbe Coolify-Anwendung bereitstellen. Im Bereitstellungsprotokoll den tatsächlich verwendeten Commit kontrollieren. Die gespeicherten Passwörter und Buchungen bleiben im eingebundenen Datenordner erhalten; die Passworteinrichtung ist bei einem Update nicht erneut nötig.
+Für automatische Updates in derselben Coolify-Anwendung unter **Git Source** die vorhandene GitHub-App mit dem Repository `mutterstefan-maker/brennwerkbeer.de` verbinden. Branch `main` und Commit-Auswahl `HEAD` beibehalten. Unter **Advanced** muss **Auto Deploy** aktiviert sein. Die GitHub-App muss für dieses Repository installiert sein und Push-Ereignisse an Coolify übermitteln können.
+
+Nach erfolgreicher Einrichtung genügt ein Push nach `main`; Coolify startet die Bereitstellung automatisch. Die Einrichtung mit einem echten Push prüfen: Ohne manuellen Redeploy muss ein neues Deployment mit genau diesem Commit erscheinen und erfolgreich mit einem gesunden Container enden. Im Bereitstellungsprotokoll den tatsächlich verwendeten Commit kontrollieren. Die gespeicherten Passwörter und Buchungen bleiben im eingebundenen Datenordner erhalten; die Passworteinrichtung ist bei einem Update nicht erneut nötig.
 
 ## Voraussetzungen
 
